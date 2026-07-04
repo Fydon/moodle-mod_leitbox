@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Custom completion class for mod_leitbox.
+ * Custom completion class for mod_adaptivereview.
  *
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_leitbox\completion;
+namespace mod_adaptivereview\completion;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -30,11 +30,11 @@ use core_completion\activity_custom_completion;
 
 /**
  * Activity custom completion subclass that calculates the completion state
- * of the LeitBox activity.
+ * of the adaptivereview activity.
  *
  * HOW MOODLE 4.x CUSTOM COMPLETION WORKS:
  * ----------------------------------------
- * 1. leitbox_cm_info_static() in lib.php populates $cm->customdata with the
+ * 1. adaptivereview_cm_info_static() in lib.php populates $cm->customdata with the
  *    active rules for this instance (e.g. ['completion_min_cards' => 10]).
  *
  * 2. Moodle calls get_state() for each rule defined in get_defined_custom_rules().
@@ -49,7 +49,7 @@ class custom_completion extends activity_custom_completion {
     /**
      * Fetches the list of custom completion rule names that this module defines.
      * This is the full list of possible rules — not which are active per instance.
-     * Active rules per instance are determined by leitbox_cm_info_static() in lib.php.
+     * Active rules per instance are determined by adaptivereview_cm_info_static() in lib.php.
      *
      * @return array
      */
@@ -95,11 +95,11 @@ class custom_completion extends activity_custom_completion {
             // This is the first real quality indicator in the Leitner system —
             // as opposed to COUNT(DISTINCT cardid) which also counts red cards.
             $sql = "SELECT COUNT(DISTINCT p.cardid)
-                      FROM {leitbox_progress} p
+                      FROM {adaptivereview_progress} p
                      WHERE p.userid      = :userid
                        AND p.box_number >= 1
                        AND p.cardid IN (
-                           SELECT id FROM {leitbox_cards} WHERE leitboxid = :instanceid
+                           SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = :instanceid
                        )";
             $count = (int)($DB->get_field_sql($sql, [
                 'userid'     => $userid,
@@ -115,11 +115,11 @@ class custom_completion extends activity_custom_completion {
             
             $target = (int)$customrules['completion_min_mastered'];
             $sql = "SELECT COUNT(DISTINCT cardid)
-                      FROM {leitbox_progress}
+                      FROM {adaptivereview_progress}
                      WHERE userid     = :userid
                        AND box_number = 5
                        AND cardid IN (
-                           SELECT id FROM {leitbox_cards} WHERE leitboxid = :instanceid
+                           SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = :instanceid
                        )";
             $mastered = (int)($DB->get_field_sql($sql, [
                 'userid'     => $userid,
@@ -133,15 +133,15 @@ class custom_completion extends activity_custom_completion {
                 return COMPLETION_COMPLETE;
             }
             
-            $total = (int)$DB->count_records('leitbox_cards', ['leitboxid' => $instanceid]);
+            $total = (int)$DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $instanceid]);
             if ($total === 0) {
                 return COMPLETION_INCOMPLETE; // No cards exist yet.
             }
             
             $sql = "SELECT COUNT(DISTINCT p.cardid)
-                      FROM {leitbox_progress} p
-                      JOIN {leitbox_cards} c ON p.cardid = c.id
-                     WHERE c.leitboxid = :instanceid
+                      FROM {adaptivereview_progress} p
+                      JOIN {adaptivereview_cards} c ON p.cardid = c.id
+                     WHERE c.adaptivereviewid = :instanceid
                        AND p.userid    = :userid
                        AND p.box_number = 5";
             $mastered = (int)($DB->get_field_sql($sql, [
@@ -167,17 +167,17 @@ class custom_completion extends activity_custom_completion {
 
         if (!empty($customrules['completion_min_cards'])) {
             $descriptions['completion_min_cards'] =
-                get_string('completion_min_cards_desc', 'mod_leitbox') . ' ' .
+                get_string('completion_min_cards_desc', 'mod_adaptivereview') . ' ' .
                 $customrules['completion_min_cards'];
         }
         if (!empty($customrules['completion_min_mastered'])) {
             $descriptions['completion_min_mastered'] =
-                get_string('completion_min_mastered_desc', 'mod_leitbox') . ' ' .
+                get_string('completion_min_mastered_desc', 'mod_adaptivereview') . ' ' .
                 $customrules['completion_min_mastered'];
         }
         if (!empty($customrules['completion_all_mastered'])) {
             $descriptions['completion_all_mastered'] =
-                get_string('completion_all_mastered_desc', 'mod_leitbox');
+                get_string('completion_all_mastered_desc', 'mod_adaptivereview');
         }
 
         return $descriptions;

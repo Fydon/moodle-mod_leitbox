@@ -15,12 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Manage cards page for mod_leitbox.
+ * Manage cards page for mod_adaptivereview.
  *
  * Refactored to use Moodle Output API (render_from_template),
  * Mustache templates, and AMD JavaScript modules.
  *
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,44 +32,44 @@ $id     = required_param('id', PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 $cardid = optional_param('cardid', 0, PARAM_INT);
 
-list($course, $cm) = get_course_and_cm_from_cmid($id, 'leitbox');
-$leitbox = $DB->get_record('leitbox', ['id' => $cm->instance], '*', MUST_EXIST);
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'adaptivereview');
+$adaptivereview = $DB->get_record('adaptivereview', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('moodle/course:manageactivities', $context);
 
-$PAGE->set_url('/mod/leitbox/manage.php', ['id' => $cm->id]);
-$PAGE->set_title(format_string($leitbox->name));
+$PAGE->set_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]);
+$PAGE->set_title(format_string($adaptivereview->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 /**
  * Automatically cleans up the 5 tutorial demo cards when the teacher adds their first custom card.
  *
- * @param int $leitboxid The leitbox instance ID.
+ * @param int $adaptivereviewid The leitbox instance ID.
  */
-function mod_leitbox_auto_delete_demos($leitboxid) {
+function mod_adaptivereview_auto_delete_demos($adaptivereviewid) {
     global $DB;
     // Only auto-delete if NO custom (non-demo) cards exist yet.
     $custom_count = $DB->count_records_select(
-        'leitbox_cards',
-        "leitboxid = ? AND (category IS NULL OR category != 'demo')",
-        [$leitboxid]
+        'adaptivereview_items',
+        "adaptivereviewid = ? AND (category IS NULL OR category != 'demo')",
+        [$adaptivereviewid]
     );
     if ($custom_count > 0) {
         return; // Custom cards already exist, don't touch anything.
     }
     // Delete all remaining demo cards and their progress.
     $demo_ids = $DB->get_fieldset_select(
-        'leitbox_cards', 'id',
-        "leitboxid = ? AND category = 'demo'",
-        [$leitboxid]
+        'adaptivereview_items', 'id',
+        "adaptivereviewid = ? AND category = 'demo'",
+        [$adaptivereviewid]
     );
     if (!empty($demo_ids)) {
         list($in, $params) = $DB->get_in_or_equal($demo_ids);
-        $DB->delete_records_select('leitbox_progress', "cardid $in", $params);
-        $DB->delete_records_select('leitbox_cards', "id $in", $params);
+        $DB->delete_records_select('adaptivereview_mastery', "cardid $in", $params);
+        $DB->delete_records_select('adaptivereview_items', "id $in", $params);
     }
 }
 
@@ -78,10 +78,10 @@ function mod_leitbox_auto_delete_demos($leitboxid) {
 // =========================================================
 
 if ($action === 'delete' && $cardid && confirm_sesskey()) {
-    $DB->delete_records('leitbox_progress', ['cardid' => $cardid]);
-    $DB->delete_records('leitbox_cards', ['id' => $cardid, 'leitboxid' => $leitbox->id]);
-    redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-        get_string('carddeleted', 'mod_leitbox'));
+    $DB->delete_records('adaptivereview_mastery', ['cardid' => $cardid]);
+    $DB->delete_records('adaptivereview_items', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id]);
+    redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+        get_string('carddeleted', 'mod_adaptivereview'));
 }
 
 if ($action === 'bulkdelete' && data_submitted() && confirm_sesskey()) {
@@ -90,28 +90,28 @@ if ($action === 'bulkdelete' && data_submitted() && confirm_sesskey()) {
 
     if (!empty($cardids)) {
         list($in, $params) = $DB->get_in_or_equal($cardids);
-        $params[]    = $leitbox->id;
+        $params[]    = $adaptivereview->id;
         $valid_cards = $DB->get_fieldset_sql(
-            "SELECT id FROM {leitbox_cards} WHERE id $in AND leitboxid = ?", $params);
+            "SELECT id FROM {adaptivereview_items} WHERE id $in AND adaptivereviewid = ?", $params);
 
         if (!empty($valid_cards)) {
             $deleted_count = count($valid_cards);
             list($in_valid, $params_valid) = $DB->get_in_or_equal($valid_cards);
-            $DB->delete_records_select('leitbox_progress', "cardid $in_valid", $params_valid);
-            $DB->delete_records_select('leitbox_cards', "id $in_valid", $params_valid);
+            $DB->delete_records_select('adaptivereview_mastery', "cardid $in_valid", $params_valid);
+            $DB->delete_records_select('adaptivereview_items', "id $in_valid", $params_valid);
         }
     }
 
     if ($deleted_count > 0) {
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-            get_string('cardsdeleted', 'mod_leitbox', $deleted_count));
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+            get_string('cardsdeleted', 'mod_adaptivereview', $deleted_count));
     } else {
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]));
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]));
     }
 }
 
 if ($action === 'export' && confirm_sesskey()) {
-    $cards          = $DB->get_records('leitbox_cards', ['leitboxid' => $leitbox->id], 'id ASC');
+    $cards          = $DB->get_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id], 'id ASC');
     $export_content = "";
     foreach ($cards as $c) {
         $export_content .= "===CARD===\n";
@@ -122,16 +122,16 @@ if ($action === 'export' && confirm_sesskey()) {
         }
         $export_content .= "\n";
     }
-    $filename = clean_filename($leitbox->name) . '_export.txt';
+    $filename = clean_filename($adaptivereview->name) . '_export.txt';
     send_file($export_content, $filename, 0, 0, true, true, 'text/plain');
     die();
 }
 
 if ($action === 'add' && data_submitted() && confirm_sesskey()) {
-    $current_count = $DB->count_records('leitbox_cards', ['leitboxid' => $leitbox->id]);
+    $current_count = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
     if ($current_count >= 200) {
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-            get_string('error_limit_reached', 'mod_leitbox'), null,
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+            get_string('error_limit_reached', 'mod_adaptivereview'), null,
             \core\output\notification::NOTIFY_ERROR);
     }
 
@@ -140,21 +140,21 @@ if ($action === 'add' && data_submitted() && confirm_sesskey()) {
     $h = optional_param('hint', '', PARAM_CLEANHTML);
 
     if (!empty($q) && !empty($a)) {
-        mod_leitbox_auto_delete_demos($leitbox->id);
+        mod_adaptivereview_auto_delete_demos($adaptivereview->id);
         $newcard            = new stdClass();
-        $newcard->leitboxid = $leitbox->id;
+        $newcard->adaptivereviewid = $adaptivereview->id;
         $newcard->question  = $q;
         $newcard->answer    = $a;
         $newcard->hint      = $h;
-        $DB->insert_record('leitbox_cards', $newcard);
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-            get_string('cardadded', 'mod_leitbox'));
+        $DB->insert_record('adaptivereview_items', $newcard);
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+            get_string('cardadded', 'mod_adaptivereview'));
     }
 }
 
 if ($action === 'update' && data_submitted() && confirm_sesskey() && $cardid) {
     // Security check: ensure the card belongs to this leitbox instance.
-    if (!$DB->record_exists('leitbox_cards', ['id' => $cardid, 'leitboxid' => $leitbox->id])) {
+    if (!$DB->record_exists('adaptivereview_items', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id])) {
         throw new \moodle_exception('invalidrecord');
     }
 
@@ -168,42 +168,42 @@ if ($action === 'update' && data_submitted() && confirm_sesskey() && $cardid) {
         $updatecard->question = $q;
         $updatecard->answer   = $a;
         $updatecard->hint     = $h;
-        $DB->update_record('leitbox_cards', $updatecard);
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-            get_string('cardupdated', 'mod_leitbox'));
+        $DB->update_record('adaptivereview_items', $updatecard);
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+            get_string('cardupdated', 'mod_adaptivereview'));
     }
 }
 
 if ($action === 'import' && data_submitted() && confirm_sesskey()) {
     $importtext   = required_param('importdata', PARAM_RAW);
-    $parsed_cards = \mod_leitbox\import_handler::parse_text($importtext);
+    $parsed_cards = \mod_adaptivereview\import_handler::parse_text($importtext);
 
-    $current_count = $DB->count_records('leitbox_cards', ['leitboxid' => $leitbox->id]);
+    $current_count = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
     $new_total     = $current_count + count($parsed_cards);
 
     if ($new_total > 200) {
-        redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-            get_string('error_limit_exceeded_import', 'mod_leitbox',
+        redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+            get_string('error_limit_exceeded_import', 'mod_adaptivereview',
                 max(0, 200 - $current_count)),
             null, \core\output\notification::NOTIFY_ERROR);
     }
 
     if (!empty($parsed_cards)) {
-        mod_leitbox_auto_delete_demos($leitbox->id);
+        mod_adaptivereview_auto_delete_demos($adaptivereview->id);
     }
 
     $count = 0;
     foreach ($parsed_cards as $card) {
         $newcard            = new stdClass();
-        $newcard->leitboxid = $leitbox->id;
+        $newcard->adaptivereviewid = $adaptivereview->id;
         $newcard->question  = $card['question'];
         $newcard->answer    = $card['answer'];
         $newcard->hint      = $card['hint'];
-        $DB->insert_record('leitbox_cards', $newcard);
+        $DB->insert_record('adaptivereview_items', $newcard);
         $count++;
     }
-    redirect(new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]),
-        get_string('cardsimported', 'mod_leitbox', $count));
+    redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
+        get_string('cardsimported', 'mod_adaptivereview', $count));
 }
 
 // =========================================================
@@ -213,34 +213,34 @@ if ($action === 'import' && data_submitted() && confirm_sesskey()) {
 // Card being edited (if applicable).
 $editcard = null;
 if ($action === 'edit' && $cardid) {
-    $editcard = $DB->get_record('leitbox_cards',
-        ['id' => $cardid, 'leitboxid' => $leitbox->id]);
+    $editcard = $DB->get_record('adaptivereview_items',
+        ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id]);
 }
 
 // AI prompt templates (passed to AMD module for client-side switching).
 $prompts = [
-    'standard' => get_string('prompt_template_standard', 'mod_leitbox'),
-    'tf'       => get_string('prompt_template_tf',       'mod_leitbox'),
-    'vocab'    => get_string('prompt_template_vocab',    'mod_leitbox'),
-    'cloze'    => get_string('prompt_template_cloze',    'mod_leitbox'),
-    'jeopardy' => get_string('prompt_template_jeopardy', 'mod_leitbox'),
-    'transfer' => get_string('prompt_template_transfer', 'mod_leitbox'),
+    'standard' => get_string('prompt_template_standard', 'mod_adaptivereview'),
+    'tf'       => get_string('prompt_template_tf',       'mod_adaptivereview'),
+    'vocab'    => get_string('prompt_template_vocab',    'mod_adaptivereview'),
+    'cloze'    => get_string('prompt_template_cloze',    'mod_adaptivereview'),
+    'jeopardy' => get_string('prompt_template_jeopardy', 'mod_adaptivereview'),
+    'transfer' => get_string('prompt_template_transfer', 'mod_adaptivereview'),
 ];
 
 // Pagination.
 $page       = optional_param('page', 0, PARAM_INT);
 $perpage    = 50;
-$totalcards = $DB->count_records('leitbox_cards', ['leitboxid' => $leitbox->id]);
-$cards      = $DB->get_records('leitbox_cards', ['leitboxid' => $leitbox->id],
+$totalcards = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
+$cards      = $DB->get_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id],
     'id ASC', '*', $page * $perpage, $perpage);
 
 // Build the cards array for the Mustache template.
 $cardrows = [];
 $rownum   = ($page * $perpage) + 1;
 foreach ($cards as $c) {
-    $editurl = (new moodle_url('/mod/leitbox/manage.php',
+    $editurl = (new moodle_url('/mod/adaptivereview/manage.php',
         ['id' => $cm->id, 'action' => 'edit', 'cardid' => $c->id]))->out(false);
-    $delurl  = (new moodle_url('/mod/leitbox/manage.php',
+    $delurl  = (new moodle_url('/mod/adaptivereview/manage.php',
         ['id' => $cm->id, 'action' => 'delete', 'cardid' => $c->id,
          'sesskey' => sesskey()]))->out(false);
 
@@ -258,7 +258,7 @@ foreach ($cards as $c) {
 }
 
 // Pre-render paging bars (injected via triple-mustache {{{ }}}).
-$manageurl      = new moodle_url('/mod/leitbox/manage.php', ['id' => $cm->id]);
+$manageurl      = new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]);
 $pagingbartop   = '';
 $pagingbarbottom = '';
 if (!empty($cards)) {
@@ -268,37 +268,37 @@ if (!empty($cards)) {
 
 $templatedata = [
     // Navigation.
-    'backurl'      => (new moodle_url('/mod/leitbox/view.php', ['id' => $cm->id]))->out(false),
-    'managebaseurl'=> (new moodle_url('/mod/leitbox/manage.php'))->out(false),
+    'backurl'      => (new moodle_url('/mod/adaptivereview/view.php', ['id' => $cm->id]))->out(false),
+    'managebaseurl'=> (new moodle_url('/mod/adaptivereview/manage.php'))->out(false),
     'cmid'         => $cm->id,
     'sesskey'      => sesskey(),
 
     // Localised strings.
-    'strdidacticnotice'  => get_string('didactic_limit_notice', 'mod_leitbox'),
-    'strbacktoactivity'  => get_string('backtoactivity',        'mod_leitbox'),
-    'straddsinglecard'   => get_string('addsinglecard',         'mod_leitbox'),
-    'streditsinglecard'  => get_string('editsinglecard',        'mod_leitbox'),
-    'strquestion'        => get_string('question',              'mod_leitbox'),
-    'stranswer'          => get_string('answer',                'mod_leitbox'),
-    'strhint'            => get_string('hint',                  'mod_leitbox'),
+    'strdidacticnotice'  => get_string('didactic_limit_notice', 'mod_adaptivereview'),
+    'strbacktoactivity'  => get_string('backtoactivity',        'mod_adaptivereview'),
+    'straddsinglecard'   => get_string('addsinglecard',         'mod_adaptivereview'),
+    'streditsinglecard'  => get_string('editsinglecard',        'mod_adaptivereview'),
+    'strquestion'        => get_string('question',              'mod_adaptivereview'),
+    'stranswer'          => get_string('answer',                'mod_adaptivereview'),
+    'strhint'            => get_string('hint',                  'mod_adaptivereview'),
     'stroptional'        => get_string('optional',              'moodle'),
-    'straddcard'         => get_string('addcard',               'mod_leitbox'),
-    'strupdatecard'      => get_string('updatecard',            'mod_leitbox'),
-    'strcancel'          => get_string('cancel',                'mod_leitbox'),
-    'strbulkimport'      => get_string('bulkimport',            'mod_leitbox'),
-    'strbulkimportdesc'  => get_string('bulkimportdesc',        'mod_leitbox'),
-    'strprompttypesel'   => get_string('prompt_type_selection', 'mod_leitbox'),
-    'strpromptinstruct'  => get_string('prompt_instruction',    'mod_leitbox'),
-    'strimportcards'     => get_string('importcards',           'mod_leitbox'),
-    'strimportph'        => get_string('import_placeholder',    'mod_leitbox'),
-    'strexistingcards'   => get_string('existingcards',         'mod_leitbox'),
-    'strnocards'         => get_string('nocards',               'mod_leitbox'),
-    'strquestioncol'     => get_string('question',              'mod_leitbox'),
-    'stranswercol'       => get_string('answer',                'mod_leitbox'),
-    'strhintcol'         => get_string('hint',                  'mod_leitbox'),
+    'straddcard'         => get_string('addcard',               'mod_adaptivereview'),
+    'strupdatecard'      => get_string('updatecard',            'mod_adaptivereview'),
+    'strcancel'          => get_string('cancel',                'mod_adaptivereview'),
+    'strbulkimport'      => get_string('bulkimport',            'mod_adaptivereview'),
+    'strbulkimportdesc'  => get_string('bulkimportdesc',        'mod_adaptivereview'),
+    'strprompttypesel'   => get_string('prompt_type_selection', 'mod_adaptivereview'),
+    'strpromptinstruct'  => get_string('prompt_instruction',    'mod_adaptivereview'),
+    'strimportcards'     => get_string('importcards',           'mod_adaptivereview'),
+    'strimportph'        => get_string('import_placeholder',    'mod_adaptivereview'),
+    'strexistingcards'   => get_string('existingcards',         'mod_adaptivereview'),
+    'strnocards'         => get_string('nocards',               'mod_adaptivereview'),
+    'strquestioncol'     => get_string('question',              'mod_adaptivereview'),
+    'stranswercol'       => get_string('answer',                'mod_adaptivereview'),
+    'strhintcol'         => get_string('hint',                  'mod_adaptivereview'),
     'stractionscol'      => get_string('actions',               'moodle'),
-    'strdeleteselected'  => get_string('deleteselected',        'mod_leitbox'),
-    'strexportcards'     => get_string('exportcards',           'mod_leitbox'),
+    'strdeleteselected'  => get_string('deleteselected',        'mod_adaptivereview'),
+    'strexportcards'     => get_string('exportcards',           'mod_adaptivereview'),
     'strselectall'       => get_string('selectall',             'moodle'),
 
     // Card form fields.
@@ -310,21 +310,21 @@ $templatedata = [
 
     // Prompt type selector options.
     'prompttypes' => [
-        ['key' => 'standard', 'label' => get_string('prompt_type_standard', 'mod_leitbox'), 'selected' => true],
-        ['key' => 'tf',       'label' => get_string('prompt_type_tf',       'mod_leitbox')],
-        ['key' => 'vocab',    'label' => get_string('prompt_type_vocab',    'mod_leitbox')],
-        ['key' => 'cloze',    'label' => get_string('prompt_type_cloze',    'mod_leitbox')],
-        ['key' => 'jeopardy', 'label' => get_string('prompt_type_jeopardy', 'mod_leitbox')],
-        ['key' => 'transfer', 'label' => get_string('prompt_type_transfer', 'mod_leitbox')],
+        ['key' => 'standard', 'label' => get_string('prompt_type_standard', 'mod_adaptivereview'), 'selected' => true],
+        ['key' => 'tf',       'label' => get_string('prompt_type_tf',       'mod_adaptivereview')],
+        ['key' => 'vocab',    'label' => get_string('prompt_type_vocab',    'mod_adaptivereview')],
+        ['key' => 'cloze',    'label' => get_string('prompt_type_cloze',    'mod_adaptivereview')],
+        ['key' => 'jeopardy', 'label' => get_string('prompt_type_jeopardy', 'mod_adaptivereview')],
+        ['key' => 'transfer', 'label' => get_string('prompt_type_transfer', 'mod_adaptivereview')],
     ],
-    'initialprompt'  => get_string('prompt_template_standard', 'mod_leitbox'),
+    'initialprompt'  => get_string('prompt_template_standard', 'mod_adaptivereview'),
 
     // Cards table.
     'hascards'       => !empty($cards),
     'cards'          => $cardrows,
     'pagingbartop'   => $pagingbartop,
     'pagingbarbottom'=> $pagingbarbottom,
-    'exporturl'      => (new moodle_url('/mod/leitbox/manage.php',
+    'exporturl'      => (new moodle_url('/mod/adaptivereview/manage.php',
         ['id' => $cm->id, 'action' => 'export', 'sesskey' => sesskey()]))->out(false),
 ];
 
@@ -332,8 +332,8 @@ $templatedata = [
 // (avoids Moodle's 1024-character limit on js_call_amd arguments).
 $amdparams = [
     'prompts'            => $prompts,
-    'confirmDelete'      => get_string('confirmdeletecard',  'mod_leitbox'),
-    'confirmBulkDelete'  => get_string('confirmbulkdelete',  'mod_leitbox'),
+    'confirmDelete'      => get_string('confirmdeletecard',  'mod_adaptivereview'),
+    'confirmBulkDelete'  => get_string('confirmbulkdelete',  'mod_adaptivereview'),
 ];
 $templatedata['jsconfig'] = json_encode($amdparams);
 
@@ -342,8 +342,8 @@ $templatedata['jsconfig'] = json_encode($amdparams);
 // =========================================================
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('managecards', 'mod_leitbox'));
-echo $OUTPUT->notification(get_string('didactic_limit_notice', 'mod_leitbox'),
+echo $OUTPUT->heading(get_string('managecards', 'mod_adaptivereview'));
+echo $OUTPUT->notification(get_string('didactic_limit_notice', 'mod_adaptivereview'),
     \core\output\notification::NOTIFY_INFO);
-echo $OUTPUT->render_from_template('mod_leitbox/manage', $templatedata);
+echo $OUTPUT->render_from_template('mod_adaptivereview/manage', $templatedata);
 echo $OUTPUT->footer();

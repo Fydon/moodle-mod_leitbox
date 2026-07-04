@@ -15,47 +15,73 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_leitbox_upgrade($oldversion) {
+function xmldb_adaptivereview_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2026010103) {
-        $table = new xmldb_table('leitbox');
+        $table = new xmldb_table('adaptivereview');
         $field = new xmldb_field('completion_min_mastered', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'completion_min_cards');
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2026010103, 'leitbox');
+        upgrade_mod_savepoint(true, 2026010103, 'adaptivereview');
     }
 
     if ($oldversion < 2026022705) {
-        $table = new xmldb_table('leitbox');
+        $table = new xmldb_table('adaptivereview');
         $field = new xmldb_field('cardorder', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'introformat');
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2026022705, 'leitbox');
+        upgrade_mod_savepoint(true, 2026022705, 'adaptivereview');
     }
 
     if ($oldversion < 2026030100) {
-        $table = new xmldb_table('leitbox');
+        $table = new xmldb_table('adaptivereview');
         $field = new xmldb_field('completion_all_mastered', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'completion_min_mastered');
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2026030100, 'leitbox');
+        upgrade_mod_savepoint(true, 2026030100, 'adaptivereview');
+    }
+
+    if ($oldversion < 2026061805) {
+        $table = new xmldb_table('adaptivereview_mastery');
+
+        $field = new xmldb_field('masteryscore', XMLDB_TYPE_NUMBER, '5,2', null, XMLDB_NOTNULL, null, '0', 'last_reviewed');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('requiredintervaldays', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'masteryscore');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('nextreviewdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'requiredintervaldays');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('lastreviewdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'nextreviewdate');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026061805, 'adaptivereview');
     }
 
     return true;

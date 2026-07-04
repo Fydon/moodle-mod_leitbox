@@ -15,22 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The mod_leitbox course module viewed event.
+ * The mod_adaptivereview course module viewed event.
  *
- * Fired each time a user opens the LeitBox activity view.
+ * Fired each time a user opens the adaptivereview activity view.
  * Enables proper activity logging, reports, and analytics in Moodle.
  *
- * @package    mod_leitbox
+ * @package    mod_adaptivereview
  * @copyright  2026 Peter Pleimfeldner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_leitbox\event;
+namespace mod_adaptivereview\event;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_leitbox course module viewed event class.
+ * The mod_adaptivereview course module viewed event class.
  */
 class course_module_viewed extends \core\event\course_module_viewed {
 
@@ -40,7 +40,7 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return void
      */
     protected function init() {
-        $this->data['objecttable'] = 'leitbox';
+        $this->data['objecttable'] = 'adaptivereview';
         parent::init();
     }
 
@@ -50,7 +50,7 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' viewed the leitbox activity with " .
+        return "The user with id '$this->userid' viewed the adaptivereview activity with " .
                "course module id '$this->contextinstanceid'.";
     }
 
@@ -60,6 +60,6 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return string
      */
     public static function get_name() {
-        return get_string('event_course_module_viewed', 'mod_leitbox');
+        return get_string('event_course_module_viewed', 'mod_adaptivereview');
     }
 }

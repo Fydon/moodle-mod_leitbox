@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -23,7 +23,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
-class mod_leitbox_mod_form extends moodleform_mod {
+class mod_adaptivereview_mod_form extends moodleform_mod { 
 
     public function definition() {
         global $CFG;
@@ -33,7 +33,7 @@ class mod_leitbox_mod_form extends moodleform_mod {
         // General section.
         $mform->addElement('header', 'general', get_string('general', 'form'));
         
-        $mform->addElement('text', 'name', get_string('leitboxname', 'mod_leitbox'), ['size' => '64']);
+        $mform->addElement('text', 'name', get_string('adaptivereviewname', 'mod_adaptivereview'), ['size' => '64']);
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -45,14 +45,14 @@ class mod_leitbox_mod_form extends moodleform_mod {
         $this->standard_intro_elements();
 
         // Plugin-specific settings.
-        $mform->addElement('header', 'leitboxfieldset', get_string('settings', 'mod_leitbox'));
+        $mform->addElement('header', 'leitboxfieldset', get_string('settings', 'mod_adaptivereview'));
 
-        $mform->addElement('select', 'cardorder', get_string('cardorder', 'mod_leitbox'), [
-            0 => get_string('cardorder_random', 'mod_leitbox'),
-            1 => get_string('cardorder_sequential', 'mod_leitbox'),
+        $mform->addElement('select', 'cardorder', get_string('cardorder', 'mod_adaptivereview'), [
+            0 => get_string('cardorder_random', 'mod_adaptivereview'),
+            1 => get_string('cardorder_sequential', 'mod_adaptivereview'),
         ]);
         $mform->setDefault('cardorder', 0);
-        $mform->addHelpButton('cardorder', 'cardorder', 'mod_leitbox');
+        $mform->addHelpButton('cardorder', 'cardorder', 'mod_adaptivereview');
 
         // Completion rules are added by add_completion_rules() below.
         $this->standard_coursemodule_elements();
@@ -83,13 +83,13 @@ class mod_leitbox_mod_form extends moodleform_mod {
 
         $group1 = [];
         $group1[] = $mform->createElement('checkbox', $enabled1_name, '',
-            get_string('completion_min_cards_desc', 'mod_leitbox'));
+            get_string('completion_min_cards_desc', 'mod_adaptivereview'));
         $group1[] = $mform->createElement('text', $value1_name, '', ['size' => 3]);
         $mform->setType($value1_name, PARAM_INT);
 
         $mform->addGroup($group1, $group1_name,
-            get_string('completion_min_cards', 'mod_leitbox'), [' '], false);
-        $mform->addHelpButton($group1_name, 'completion_min_cards', 'mod_leitbox');
+            get_string('completion_min_cards', 'mod_adaptivereview'), [' '], false);
+        $mform->addHelpButton($group1_name, 'completion_min_cards', 'mod_adaptivereview');
         $mform->hideIf($value1_name, $enabled1_name, 'notchecked');
 
         // ----------------------------------------------------------------
@@ -101,13 +101,13 @@ class mod_leitbox_mod_form extends moodleform_mod {
 
         $group2 = [];
         $group2[] = $mform->createElement('checkbox', $enabled2_name, '',
-            get_string('completion_min_mastered_desc', 'mod_leitbox'));
+            get_string('completion_min_mastered_desc', 'mod_adaptivereview'));
         $group2[] = $mform->createElement('text', $value2_name, '', ['size' => 3]);
         $mform->setType($value2_name, PARAM_INT);
 
         $mform->addGroup($group2, $group2_name,
-            get_string('completion_min_mastered', 'mod_leitbox'), [' '], false);
-        $mform->addHelpButton($group2_name, 'completion_min_mastered', 'mod_leitbox');
+            get_string('completion_min_mastered', 'mod_adaptivereview'), [' '], false);
+        $mform->addHelpButton($group2_name, 'completion_min_mastered', 'mod_adaptivereview');
         $mform->hideIf($value2_name, $enabled2_name, 'notchecked');
 
         // ----------------------------------------------------------------
@@ -119,11 +119,11 @@ class mod_leitbox_mod_form extends moodleform_mod {
 
         $group3 = [];
         $group3[] = $mform->createElement('checkbox', $all_name, '',
-            get_string('completion_all_mastered_desc', 'mod_leitbox'));
+            get_string('completion_all_mastered_desc', 'mod_adaptivereview'));
 
         $mform->addGroup($group3, $all_group_name,
-            get_string('completion_all_mastered', 'mod_leitbox'), [' '], false);
-        $mform->addHelpButton($all_group_name, 'completion_all_mastered', 'mod_leitbox');
+            get_string('completion_all_mastered', 'mod_adaptivereview'), [' '], false);
+        $mform->addHelpButton($all_group_name, 'completion_all_mastered', 'mod_adaptivereview');
 
         return [$group1_name, $group2_name, $all_group_name];
     }

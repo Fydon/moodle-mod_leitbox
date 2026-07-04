@@ -13,23 +13,32 @@ export const moodleCall = async (methodname, args) => {
         methodname,
         args
     }];
+    
     const response = await axios.post(url, payload);
     const data = response.data[0];
     if (data.error) {
-        throw new Error(data.exception);
+    console.error(data);
+
+    const message =
+        data.exception?.message ??
+        data.message ??
+        JSON.stringify(data);
+
+    throw new Error(message);
     }
+
     return data.data;
 };
 
 export const getCardsByBox = (boxnumber) => {
-    return moodleCall('mod_leitbox_get_cards_by_box', {
+    return moodleCall('mod_adaptivereview_get_cards_by_box', {
         instanceid: config.instanceid,
         boxnumber
     });
 };
 
 export const getBoxCounts = async () => {
-    const counts = await moodleCall('mod_leitbox_get_box_counts', {
+    const counts = await moodleCall('mod_adaptivereview_get_box_counts', {
         instanceid: config.instanceid
     });
 
@@ -41,16 +50,18 @@ export const getBoxCounts = async () => {
 };
 
 export const submitAnswer = (cardid, rating) => {
-    return moodleCall('mod_leitbox_submit_answer', {
+    return moodleCall('mod_adaptivereview_submit_answer', {
         cardid,
         rating
     });
 };
 
 export const getLogoUrl = () => {
-    return `${config.wwwroot}/mod/leitbox/pix/logo.png`;
+    return `${config.wwwroot}/mod/adaptivereview/pix/logo.png`;
 };
 
-export const resetProgress = (instanceid) => {
-    return moodleCall('mod_leitbox_reset_progress', { instanceid });
+export const resetProgress = () => {
+    return moodleCall('mod_adaptivereview_reset_progress', {
+        instanceid: config.instanceid
+    });
 };

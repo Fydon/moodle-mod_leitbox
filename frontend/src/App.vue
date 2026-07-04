@@ -1,72 +1,172 @@
 <template>
-  <div class="min-h-[600px] w-full bg-slate-50 font-sans text-slate-900 py-10 px-4 rounded-3xl" style="font-family: 'Inter', system-ui, sans-serif;">
-    <Dashboard v-if="!sessionActive" @start-session="handleStartSession" />
-    
-    <div v-else class="max-w-2xl mx-auto">
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
-        <button @click="endSession" class="text-slate-500 hover:text-[#4F46E5] font-medium flex items-center gap-2 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  <div class="min-h-[600px] w-full bg-slate-50 font-sans text-slate-900 py-6 px-4 rounded-3xl" style="font-family: 'Inter', system-ui, sans-serif;">
+    <Dashboard
+      v-if="!sessionActive && !allCardsMode && !recentChoiceMode"
+      @start-session="handleStartSession"
+    />
+
+    <div v-else-if="recentChoiceMode" class="max-w-2xl mx-auto">
+      <div class="mb-5">
+        <button
+          @click="endSession"
+          class="text-slate-500 hover:text-[#4F46E5] font-medium flex items-center gap-2 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
           {{ getString('backtodashboard') }}
         </button>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-md border border-slate-100 p-8">
+        <div class="text-center mb-8">
+          <div class="mx-auto mb-4 w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20V10"/>
+              <path d="M12 10c0-4 3-6 7-6 0 4-2 7-7 7"/>
+              <path d="M12 12c0-3-2-5-6-5 0 4 2 6 6 6"/>
+            </svg>
+          </div>
+          <h2 class="text-3xl font-extrabold text-slate-800">Recently Learned</h2>
+          <p class="text-slate-500 mt-2">
+            Browse these cards without changing mastery, or practice them early.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <button
+            type="button"
+            @click="startRecentBrowse"
+            class="rounded-3xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-emerald-200 p-6 text-left transition-all shadow-sm hover:shadow-md"
+          >
+            <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+              </svg>
+            </div>
+            <div class="text-xl font-extrabold text-slate-800">Browse Cards</div>
+            <p class="text-sm text-slate-500 mt-2">
+              Flip through recently learned cards with previous and next. No mastery update.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            @click="startRecentPractice"
+            class="rounded-3xl bg-emerald-500 hover:bg-emerald-600 p-6 text-left transition-all shadow-md hover:shadow-lg text-white"
+          >
+            <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <div class="text-xl font-extrabold">Practice Review</div>
+            <p class="text-sm text-emerald-50 mt-2">
+              Quiz yourself early with I Know It / Not Yet.
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="allCardsMode" class="max-w-5xl mx-auto">
+      <div class="mb-4">
+        <button
+          @click="endSession"
+          class="text-slate-500 hover:text-[#4F46E5] font-medium flex items-center gap-2 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          {{ getString('backtodashboard') }}
+        </button>
+      </div>
+
+      <CardList
+        :cards="allCards"
+        :mastery-goal="masteryGoal"
+        @review-card="handleLibraryCard"
+      />
+    </div>
+
+    <div v-else class="max-w-2xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
+        <button
+          @click="endSession"
+          class="text-slate-500 hover:text-[#4F46E5] font-medium flex items-center gap-2 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          {{ getString('backtodashboard') }}
+        </button>
+
         <div class="text-sm font-bold px-4 py-1.5 rounded-full shadow-sm border flex items-center gap-2" :class="getBadgeClass(activeBox)">
           <span class="w-2 h-2 rounded-full" :class="getDotClass(activeBox)"></span>
-          {{ getBoxName(activeBox) }} 
-          <span class="opacity-40 mx-1 font-normal">|</span> 
-          {{ getString('cardxofy_x') }} {{ Math.min(currentCardIndex + 1, sessionCards.length) }} {{ getString('cardxofy_y') }} <span class="font-extrabold">{{ sessionCards.length }}</span>
+          {{ getBoxName(activeBox) }}
+          <span class="opacity-40 mx-1 font-normal">|</span>
+          {{ getString('cardxofy_x') }}
+          {{ Math.min(currentCardIndex + 1, Math.max(sessionCards.length, 1)) }}
+          {{ getString('cardxofy_y') }}
+          <span class="font-extrabold">{{ sessionCards.length }}</span>
         </div>
       </div>
 
-      <div v-if="loading" class="flex flex-col items-center justify-center py-32 text-slate-500">
+      <div v-if="loading" class="flex flex-col items-center justify-center py-24 text-slate-500">
         <svg class="animate-spin h-10 w-10 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <p class="font-medium text-lg">{{ getString('loadingcards') }}</p>
       </div>
-      
-      <div v-else-if="sessionFinished" class="text-center py-12 bg-white rounded-3xl shadow-md border border-slate-100 p-8 transform transition-all max-w-lg mx-auto">
-        <div class="text-6xl mb-4">{{ getSessionFeedback().emoji }}</div>
-        <h3 class="text-2xl font-extrabold text-slate-800 mb-2 tracking-tight">{{ getSessionFeedback().title }}</h3>
-        <p class="text-slate-500 mb-8">{{ getSessionFeedback().desc }}</p>
-        
-        <!-- Stats visual block -->
-        <div class="mb-10 w-full mt-4">
-            <div class="flex justify-between text-sm font-bold text-slate-600 mb-2 px-1">
-               <span>{{ sessionCards.length }} {{ getString('cards') }}</span>
-            </div>
-            <div class="w-full flex h-4 rounded-full overflow-hidden shadow-inner bg-slate-100 mb-3">
-               <div v-if="sessionStats.known > 0" :style="{ width: (sessionStats.known / sessionCards.length * 100) + '%' }" class="bg-emerald-400" :title="getString('known_btn')"></div>
-               <div v-if="sessionStats.again > 0" :style="{ width: (sessionStats.again / sessionCards.length * 100) + '%' }" class="bg-amber-400" :title="getString('again_btn')"></div>
-               <div v-if="sessionStats.hard > 0" :style="{ width: (sessionStats.hard / sessionCards.length * 100) + '%' }" class="bg-red-400" :title="getString('hard_btn')"></div>
-            </div>
-            <div class="flex justify-center flex-wrap gap-4 mt-1 text-xs font-semibold text-slate-600">
-               <div v-if="sessionStats.known > 0" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> {{ sessionStats.known }} {{ getString('known_btn') }}</div>
-               <div v-if="sessionStats.again > 0" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> {{ sessionStats.again }} {{ getString('again_btn') }}</div>
-               <div v-if="sessionStats.hard > 0" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> {{ sessionStats.hard }} {{ getString('hard_btn') }}</div>
-            </div>
-        </div>
 
-        <button @click="endSession" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 w-full">
+      <div v-else-if="sessionFinished" class="text-center py-10 bg-white rounded-3xl shadow-md border border-slate-100 p-8 transform transition-all max-w-lg mx-auto">
+        <div class="text-5xl mb-4">{{ reviewMode === 'browse' ? '🌱' : getSessionFeedback().emoji }}</div>
+        <h3 class="text-2xl font-extrabold text-slate-800 mb-2 tracking-tight">
+          {{ reviewMode === 'browse' ? 'Finished Browsing' : getSessionFeedback().title }}
+        </h3>
+        <p class="text-slate-500 mb-8">
+          {{ reviewMode === 'browse' ? 'Return to the dashboard when you are ready.' : getSessionFeedback().desc }}
+        </p>
+
+        <button
+          @click="endSession"
+          class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 w-full"
+        >
           {{ getString('backtodashboard') }}
         </button>
       </div>
-      
-      <div v-else class="flex flex-col items-center w-full perspective-1000">
+
+      <div v-else-if="currentCard" class="flex flex-col items-center w-full perspective-1000">
         <Transition name="fade-slide" mode="out-in">
-          <Card :key="currentCard.id" :card="currentCard" @rate="handleRate" />
+          <Card
+            :key="`${currentCard.id}-${currentCardIndex}-${reviewMode}`"
+            :card="currentCard"
+            :mode="reviewMode"
+            :current-index="currentCardIndex"
+            :total-cards="sessionCards.length"
+            :mastery-goal="masteryGoal"
+            :has-previous="reviewMode === 'browse' && currentCardIndex > 0"
+            :has-next="reviewMode === 'browse' && currentCardIndex < sessionCards.length - 1"
+            @answer="handleAnswer"
+            @continue="handleContinue"
+            @previous="goPrevious"
+            @next="goNext"
+          />
         </Transition>
       </div>
-      
-      <!-- Progress Bar (Hide during finished screen) -->
-      <div v-if="!loading && !sessionFinished && sessionCards.length > 0" class="mt-14 max-w-md mx-auto relative group">
+
+      <div v-if="!loading && !sessionFinished && sessionCards.length > 0" class="mt-8 max-w-md mx-auto relative group">
         <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner">
-          <div class="bg-gradient-to-r from-indigo-400 to-violet-500 h-2 rounded-full transition-all duration-500 ease-out" :style="{ width: `${progressPercentage}%` }"></div>
+          <div
+            class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2 rounded-full transition-all duration-500 ease-out"
+            :style="{ width: `${progressPercentage}%` }"
+          ></div>
         </div>
         <div class="absolute -top-6 text-center w-full text-xs font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            {{ Math.round(progressPercentage) }}% {{ getString('completed') }}
+          {{ Math.round(progressPercentage) }}% {{ getString('completed') }}
         </div>
       </div>
-      
     </div>
   </div>
 </template>
@@ -75,55 +175,50 @@
 import { ref, computed } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import Card from './components/Card.vue';
+import CardList from './components/CardList.vue';
 import { getCardsByBox, submitAnswer } from './api';
 
 const FALLBACKS = {
-    sessiondone: 'Alles erledigt!',
-    sessiondonedesc: 'Gute Arbeit. Gehe zurück zum Dashboard für den nächsten Stapel.',
-    feedback_grand_title: 'Meisterwerk',
-    feedback_grand_desc: 'Herzlichen Glückwunsch! Du hast alle Karten im System bis in den Experten-Stapel gebracht und zudem völlig fehlerfrei wiedergegeben. Du hast dieses Thema absolut verstanden!',
-    feedback_perfect_title: 'Starkes Ergebnis',
-    feedback_perfect_desc: 'Du hast alle Inhalte korrekt ins Gedächtnis gerufen. Das Material sitzt.',
-    feedback_good_title: 'Solide Leistung',
-    feedback_good_desc: 'Du hast einen guten Überblick. Die verbleibenden Lücken schließen sich mit der Zeit.',
-    feedback_okay_title: 'Auf dem richtigen Weg',
-    feedback_okay_desc: 'Die Basis steht. Eine weitere Wiederholung wird dein Wissen festigen.',
-    feedback_learn_title: 'Wiederholung empfohlen',
-    feedback_learn_desc: 'Einige Antworten fielen dir schwer. Nutze die nächste Runde, um diese trainieren.',
-    completed: 'Abgeschlossen',
-    loadingcards: 'Karten werden geladen...',
-    cards: 'Karten',
-    known_btn: 'Gewusst',
-    again_btn: 'Nochmal',
-    hard_btn: 'Schwer',
-    backtodashboard: 'Zurück zum Dashboard',
-    cardxofy_x: 'Karte',
-    cardxofy_y: 'von',
-    box0: 'Neu',
-    box1: 'Einsteiger',
-    box2: 'Lernender',
-    box3: 'Fortgeschritten',
-    box4: 'Erfahren',
-    box5: 'Experte',
+    feedback_perfect_title: 'Strong result',
+    feedback_perfect_desc: 'You recalled every card correctly. The material is sticking.',
+    feedback_good_title: 'Solid performance',
+    feedback_good_desc: 'You have a good grasp of this material. The remaining gaps will close with review.',
+    feedback_okay_title: 'On the right track',
+    feedback_okay_desc: 'You are building a foundation. Another review will help strengthen recall.',
+    feedback_learn_title: 'Review recommended',
+    feedback_learn_desc: 'Some answers were difficult. Use the next round to strengthen those cards.',
+    completed: 'completed',
+    loadingcards: 'Loading cards...',
+    backtodashboard: 'Back to Dashboard',
+    cardxofy_x: 'Card',
+    cardxofy_y: 'of',
+    error_loading_cards: 'Error loading cards.',
+    box0: 'Due Today',
+    box1: 'New',
+    box2: 'Recently Learned',
+    box3: 'All Cards',
 };
 
 const getString = (key) => {
-    // 1. Try Moodle's loaded strings
-    const moodleStr = window.M?.str?.mod_leitbox?.[key];
-    // 2. Only use Moodle string if it's valid (not a [[placeholder]])
+    const moodleStr = window.M?.str?.mod_adaptivereview?.[key];
     if (moodleStr && !moodleStr.startsWith('[[')) return moodleStr;
-    // 3. Fall back to hardcoded defaults
     return FALLBACKS[key] ?? key;
 };
 
+const masteryGoal = ref(4.0);
 const sessionActive = ref(false);
 const sessionFinished = ref(false);
+const allCardsMode = ref(false);
+const recentChoiceMode = ref(false);
 const activeBox = ref(null);
 const loading = ref(false);
 const sessionCards = ref([]);
+const recentCards = ref([]);
+const allCards = ref([]);
 const currentCardIndex = ref(0);
 const sessionStats = ref({ known: 0, again: 0, hard: 0 });
-const totalCardsInSystem = ref(0);
+const reviewMode = ref('review');
+const firstSessionResponses = ref({});
 
 const currentCard = computed(() => sessionCards.value[currentCardIndex.value]);
 
@@ -133,114 +228,206 @@ const progressPercentage = computed(() => {
 });
 
 const getSessionFeedback = () => {
-    const total = sessionCards.value.length;
-    if (total === 0) return { emoji: '🎉', title: getString('sessiondone'), desc: getString('sessiondonedesc') };
-    
-    // Grand Finale check: all cards in system are in Box 5 and answered perfectly
-    if (activeBox.value === 5 && total === totalCardsInSystem.value && sessionStats.value.known === total) {
-        return { emoji: '🎓', title: getString('feedback_grand_title'), desc: getString('feedback_grand_desc') };
-    }
+    const total = Math.max(1, sessionStats.value.known + sessionStats.value.hard);
+    const score = sessionStats.value.known / total;
 
-    // Weight calculation to determine performance
-    const score = (sessionStats.value.known + (sessionStats.value.again * 0.5)) / total;
-    
     if (score >= 0.9) {
         return { emoji: '🏆', title: getString('feedback_perfect_title'), desc: getString('feedback_perfect_desc') };
     } else if (score >= 0.7) {
         return { emoji: '🌟', title: getString('feedback_good_title'), desc: getString('feedback_good_desc') };
     } else if (score >= 0.4) {
         return { emoji: '👍', title: getString('feedback_okay_title'), desc: getString('feedback_okay_desc') };
-    } else {
-        return { emoji: '💪', title: getString('feedback_learn_title'), desc: getString('feedback_learn_desc') };
     }
+
+    return { emoji: '💪', title: getString('feedback_learn_title'), desc: getString('feedback_learn_desc') };
 };
 
 const getBadgeClass = (box) => {
-    const classes = [
-        'bg-blue-50 text-blue-700 border-blue-200',
-        'bg-orange-50 text-orange-800 border-orange-200',
-        'bg-yellow-50 text-yellow-800 border-yellow-200',
-        'bg-lime-50 text-lime-800 border-lime-200',
-        'bg-emerald-50 text-emerald-800 border-emerald-200',
-        'bg-green-100 text-green-800 border-green-300'
-    ];
+    const classes = {
+        0: 'bg-blue-50 text-blue-700 border-blue-200',
+        1: 'bg-orange-50 text-orange-800 border-orange-200',
+        2: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        3: 'bg-violet-50 text-violet-800 border-violet-200',
+    };
     return classes[box] || 'bg-slate-100 text-slate-700 border-slate-200';
 };
 
 const getDotClass = (box) => {
-    const classes = ['bg-blue-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-emerald-500', 'bg-green-600'];
+    const classes = {
+        0: 'bg-blue-500',
+        1: 'bg-orange-500',
+        2: 'bg-emerald-500',
+        3: 'bg-violet-500',
+    };
     return classes[box] || 'bg-slate-500';
 };
 
-const getBoxName = (box) => {
-    return getString('box' + box);
-};
+const getBoxName = (box) => getString('box' + box);
 
-const handleStartSession = async (boxnumber, totalSystemCards) => {
-    activeBox.value = boxnumber;
-    totalCardsInSystem.value = totalSystemCards;
-    sessionActive.value = true;
+const resetSessionState = () => {
     sessionFinished.value = false;
-    loading.value = true;
     currentCardIndex.value = 0;
     sessionStats.value = { known: 0, again: 0, hard: 0 };
+    firstSessionResponses.value = {};
+};
+
+const handleStartSession = async (boxnumber) => {
+    activeBox.value = boxnumber;
+    sessionActive.value = false;
+    sessionFinished.value = false;
+    allCardsMode.value = false;
+    recentChoiceMode.value = false;
+    loading.value = true;
+    resetSessionState();
+    reviewMode.value = 'review';
+
     try {
-        sessionCards.value = await getCardsByBox(boxnumber);
+        const cards = await getCardsByBox(boxnumber);
+
+        if (boxnumber === 3) {
+            allCards.value = cards;
+            allCardsMode.value = true;
+            return;
+        }
+
+        if (boxnumber === 2) {
+            recentCards.value = cards;
+            recentChoiceMode.value = true;
+            return;
+        }
+
+        sessionCards.value = cards;
+        sessionActive.value = true;
     } catch (e) {
-        console.error("Error loading session:", e);
+        console.error('Error loading session:', e);
         alert(getString('error_loading_cards'));
         sessionActive.value = false;
+        allCardsMode.value = false;
+        recentChoiceMode.value = false;
     } finally {
         loading.value = false;
     }
 };
 
-const handleRate = async (rating) => {
-    if (!currentCard.value) return;
-    
-    if (rating === 0) sessionStats.value.hard++;
-    else if (rating === 1) sessionStats.value.again++;
-    else if (rating === 2) sessionStats.value.known++;
+const startRecentBrowse = () => {
+    sessionCards.value = [...recentCards.value];
+    recentChoiceMode.value = false;
+    sessionActive.value = true;
+    reviewMode.value = 'browse';
+    resetSessionState();
+};
 
-    // Fire and forget answer submission to Moodle API
-    submitAnswer(currentCard.value.id, rating).catch(e => {
-        console.error("Failed to save answer for card", currentCard.value.id, e);
-    });
+const startRecentPractice = () => {
+    sessionCards.value = [...recentCards.value];
+    recentChoiceMode.value = false;
+    sessionActive.value = true;
+    reviewMode.value = 'review';
+    resetSessionState();
+};
 
-    // Move to next card locally
+const handleLibraryCard = (card) => {
+    allCardsMode.value = false;
+    sessionActive.value = true;
+    sessionFinished.value = false;
+    activeBox.value = 3;
+    reviewMode.value = 'browse';
+    sessionCards.value = [card];
+    currentCardIndex.value = 0;
+};
+
+const handleAnswer = async ({ card, result }) => {
+    if (!card || reviewMode.value !== 'review') {
+        return;
+    }
+
+    const cardid = String(card.id);
+
+    if (!firstSessionResponses.value[cardid]) {
+        firstSessionResponses.value[cardid] = result;
+
+        if (result === 'know') {
+            sessionStats.value.known++;
+            submitAnswer(card.id, 2).catch(e => {
+                console.error('Failed to save known answer for card', card.id, e);
+            });
+        } else {
+            sessionStats.value.hard++;
+            submitAnswer(card.id, 0).catch(e => {
+                console.error('Failed to save not-yet answer for card', card.id, e);
+            });
+        }
+    }
+};
+
+const handleContinue = ({ result }) => {
+    if (reviewMode.value === 'browse') {
+        goNextOrFinish();
+        return;
+    }
+
+    if (result === 'notyet' && currentCard.value) {
+        const cardid = String(currentCard.value.id);
+        if (firstSessionResponses.value[cardid] === 'notyet') {
+            sessionCards.value.push({ ...currentCard.value });
+        }
+    }
+
+    goNextOrFinish();
+};
+
+const goNextOrFinish = () => {
     if (currentCardIndex.value < sessionCards.value.length - 1) {
         currentCardIndex.value++;
     } else {
-        // Session complete
-        currentCardIndex.value++; // triggers 100% progress momentarily
+        currentCardIndex.value++;
         setTimeout(() => {
             sessionFinished.value = true;
-        }, 500);
+        }, 300);
     }
+};
+
+const goPrevious = () => {
+    if (currentCardIndex.value > 0) {
+        currentCardIndex.value--;
+    }
+};
+
+const goNext = () => {
+    goNextOrFinish();
 };
 
 const endSession = () => {
     sessionActive.value = false;
     sessionFinished.value = false;
+    allCardsMode.value = false;
+    recentChoiceMode.value = false;
     sessionCards.value = [];
+    recentCards.value = [];
+    allCards.value = [];
     activeBox.value = null;
+    currentCardIndex.value = 0;
     sessionStats.value = { known: 0, again: 0, hard: 0 };
+    firstSessionResponses.value = {};
+    reviewMode.value = 'review';
 };
 </script>
 
 <style>
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.3s ease;
 }
+
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateX(30px) rotateY(10deg);
+  transform: translateX(20px);
 }
+
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateX(-30px) rotateY(-10deg);
+  transform: translateX(-20px);
 }
+
 .perspective-1000 {
   perspective: 1000px;
 }
