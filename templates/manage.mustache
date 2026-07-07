@@ -1,11 +1,11 @@
 {{!
-    @template mod_leitbox/manage
+    @template mod_adaptivereview/manage
 
-    Template for the LeitBox manage cards page.
+    Template for the Adaptive Review manage cards page.
     Renders the add/edit card form, the AI bulk import section,
     and the existing cards table with pagination.
 
-    @package    mod_leitbox
+    @package    mod_adaptivereview
     @copyright  2026 Peter Pleimfeldner
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 
@@ -13,8 +13,8 @@
     {
         "cmid": 42,
         "sesskey": "abc123",
-        "backurl": "/mod/leitbox/view.php?id=42",
-        "managebaseurl": "/mod/leitbox/manage.php",
+        "backurl": "/mod/adaptivereview/view.php?id=42",
+        "managebaseurl": "/mod/adaptivereview/manage.php",
         "strdidacticnotice": "<strong>Tip:</strong> Max 200 cards.",
         "strbacktoactivity": "Back to activity",
         "straddsinglecard": "Add single card",
@@ -55,7 +55,7 @@
         "exporturl": "#"
     }
 }}
-<div class="mod-leitbox-manage">
+<div class="mod-adaptivereview-manage">
 
     {{! Back to activity button }}
     <a href="{{backurl}}" class="btn btn-secondary mb-4">{{strbacktoactivity}}</a>
@@ -113,7 +113,7 @@
 
         <div class="mb-2">
             <strong>{{strprompttypesel}}</strong><br>
-            <select id="leitbox-prompt-selector" class="custom-select form-control mb-3 mt-1 w-100">
+            <select id="adaptivereview-prompt-selector" class="custom-select form-control mb-3 mt-1 w-100">
                 {{#prompttypes}}
                 <option value="{{key}}" {{#selected}}selected{{/selected}}>{{label}}</option>
                 {{/prompttypes}}
@@ -122,7 +122,7 @@
 
         <div class="mb-4">
             <strong>{{strpromptinstruct}}</strong><br>
-            <pre id="leitbox-prompt-display"
+            <pre id="adaptivereview-prompt-display"
                  class="bg-light p-3 border rounded"
                  style="white-space: pre-wrap; font-size: 0.9em;">{{initialprompt}}</pre>
         </div>
@@ -147,7 +147,7 @@
     {{#hascards}}
     {{{pagingbartop}}}
 
-    <form action="{{managebaseurl}}" method="post" id="leitbox-bulkdelete-form">
+    <form action="{{managebaseurl}}" method="post" id="adaptivereview-bulkdelete-form">
         <input type="hidden" name="id"      value="{{cmid}}">
         <input type="hidden" name="action"  value="bulkdelete">
         <input type="hidden" name="sesskey" value="{{sesskey}}">
@@ -155,7 +155,7 @@
         <table class="generaltable w-100">
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="leitbox-selectall" title="{{strselectall}}"></th>
+                    <th><input type="checkbox" id="adaptivereview-selectall" title="{{strselectall}}"></th>
                     <th>#</th>
                     <th>{{strquestioncol}}</th>
                     <th>{{stranswercol}}</th>
@@ -166,14 +166,14 @@
             <tbody>
                 {{#cards}}
                 <tr>
-                    <td><input type="checkbox" name="cardids[]" value="{{id}}" class="leitbox-cardcheckbox"></td>
+                    <td><input type="checkbox" name="cardids[]" value="{{id}}" class="adaptivereview-cardcheckbox"></td>
                     <td>{{rownum}}</td>
                     <td>{{{question}}}</td>
                     <td>{{{answer}}}</td>
                     <td>{{{hint}}}</td>
                     <td>
                         <a href="{{editurl}}" style="margin-right:8px;">{{{editiconhtml}}}</a>
-                        <a href="{{delurl}}" class="leitbox-delete-card">{{{deleteiconhtml}}}</a>
+                        <a href="{{delurl}}" class="adaptivereview-delete-card">{{{deleteiconhtml}}}</a>
                     </td>
                 </tr>
                 {{/cards}}
@@ -198,7 +198,7 @@
 
 </div>
 {{#js}}
-require(['mod_leitbox/manage'], function(Manage) {
+require(['mod_adaptivereview/manage'], function(Manage) {
     Manage.init({{{jsconfig}}});
 });
 {{/js}}

@@ -4,12 +4,12 @@ import App from './App.vue'
 import { initApi } from './api'
 
 // Look for the config injected by Moodle block
-const rootElement = document.getElementById('v-app-mod-leitbox')
+const rootElement = document.getElementById('v-app-mod-adaptivereview')
 
 if (rootElement) {
     const config = JSON.parse(rootElement.getAttribute('data-config') || '{}')
     initApi(config)
-    createApp(App).mount('#v-app-mod-leitbox')
+    createApp(App).mount('#v-app-mod-adaptivereview')
 } else {
-    console.error("Mount point #v-app-mod-leitbox not found.");
+    console.error("Mount point #v-app-mod-adaptivereview not found.")
 }

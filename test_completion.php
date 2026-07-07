@@ -31,7 +31,7 @@ if ($total_mastered < $min_mastered_setting) {
 // Scenario 2: What happens if a user masters the SAME card twice? 
 // Moodle DB setup: a user only has ONE progress row per card.
 // So a count of Box 5 records *must* equal distinct mastered cards.
-$sql_mastered_logic_test = "SELECT COUNT(*) FROM {leitbox_progress} WHERE userid = :userid AND box_number = 5";
+$sql_mastered_logic_test = "SELECT COUNT(*) FROM {adaptivereview_progress} WHERE userid = :userid AND box_number = 5";
 echo "Pen Test 2 - SQL Logic: $sql_mastered_logic_test\n";
 echo "SQL test relies on DB constraint: UNIQUE(userid, cardid). Does install.xml enforce this?\n";
 

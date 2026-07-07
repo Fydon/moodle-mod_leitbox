@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace mod_leitbox;
+namespace mod_adaptivereview;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,7 +35,7 @@ class external extends external_api {
 
     public static function get_box_counts_parameters() {
         return new external_function_parameters([
-            'instanceid' => new external_value(PARAM_INT, 'The leitbox instance id'),
+            'instanceid' => new external_value(PARAM_INT, 'The adaptivereview instance id'),
         ]);
     }
 
@@ -46,22 +46,22 @@ class external extends external_api {
             'instanceid' => $instanceid,
         ]);
         
-        $cm = get_coursemodule_from_instance('leitbox', $params['instanceid']);
+        $cm = get_coursemodule_from_instance('adaptivereview', $params['instanceid']);
         if (!$cm) {
             throw new \moodle_exception('invalidcoursemodule');
         }
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/leitbox:view', $context);
+        require_capability('mod/adaptivereview:view', $context);
 
         $userid = $USER->id;
         $results = [];
 
         // Box 0: Cards with NO progress entry OR box_number = 0
         $sql_new = "SELECT COUNT(*) AS cnt
-                      FROM {leitbox_cards} c
-                 LEFT JOIN {leitbox_progress} p ON c.id = p.cardid AND p.userid = :userid
-                     WHERE c.leitboxid = :instanceid
+                      FROM {adaptivereview_cards} c
+                 LEFT JOIN {adaptivereview_progress} p ON c.id = p.cardid AND p.userid = :userid
+                     WHERE c.adaptivereviewid = :instanceid
                        AND (p.id IS NULL OR p.box_number = 0)";
         $count_new = $DB->count_records_sql($sql_new, ['instanceid' => $params['instanceid'], 'userid' => $userid]);
         if ($count_new > 0) {
@@ -70,9 +70,9 @@ class external extends external_api {
 
         // Boxes 1-5: Aggregate query
         $sql_boxes = "SELECT p.box_number, COUNT(*) AS cnt
-                        FROM {leitbox_cards} c
-                        JOIN {leitbox_progress} p ON c.id = p.cardid
-                       WHERE c.leitboxid = :instanceid
+                        FROM {adaptivereview_cards} c
+                        JOIN {adaptivereview_progress} p ON c.id = p.cardid
+                       WHERE c.adaptivereviewid = :instanceid
                          AND p.userid   = :userid
                          AND p.box_number > 0
                     GROUP BY p.box_number";
@@ -96,7 +96,7 @@ class external extends external_api {
 
     public static function get_cards_by_box_parameters() {
         return new external_function_parameters([
-            'instanceid' => new external_value(PARAM_INT, 'The leitbox instance id'),
+            'instanceid' => new external_value(PARAM_INT, 'The adaptivereview instance id'),
             'boxnumber'  => new external_value(PARAM_INT, 'The Leitner box number (0-5)'),
         ]);
     }
@@ -109,13 +109,13 @@ class external extends external_api {
             'boxnumber' => $boxnumber
         ]);
         
-        $cm = get_coursemodule_from_instance('leitbox', $params['instanceid']);
+        $cm = get_coursemodule_from_instance('adaptivereview', $params['instanceid']);
         if (!$cm) {
             throw new \moodle_exception('invalidcoursemodule');
         }
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/leitbox:view', $context);
+        require_capability('mod/adaptivereview:view', $context);
 
         $box = $params['boxnumber'];
         if ($box < 0 || $box > 5) {
@@ -126,24 +126,24 @@ class external extends external_api {
         $instanceid = $params['instanceid'];
         
         // Fetch instance to read cardorder setting
-        $leitbox = $DB->get_record('leitbox', ['id' => $instanceid], 'cardorder', MUST_EXIST);
-        $order_by = ($leitbox->cardorder == 1) ? "ORDER BY c.id ASC" : "";
+        $adaptivereview = $DB->get_record('adaptivereview', ['id' => $instanceid], 'cardorder', MUST_EXIST);
+        $order_by = ($adaptivereview->cardorder == 1) ? "ORDER BY c.id ASC" : "";
 
         if ($box == 0) {
             // New cards: box_number = 0 or no progress record yet
             $sql = "SELECT c.*
-                      FROM {leitbox_cards} c
-                 LEFT JOIN {leitbox_progress} p ON c.id = p.cardid AND p.userid = :userid
-                     WHERE c.leitboxid = :instanceid
+                      FROM {adaptivereview_cards} c
+                 LEFT JOIN {adaptivereview_progress} p ON c.id = p.cardid AND p.userid = :userid
+                     WHERE c.adaptivereviewid = :instanceid
                        AND (p.id IS NULL OR p.box_number = 0)
                        $order_by";
             $cards = $DB->get_records_sql($sql, ['userid' => $userid, 'instanceid' => $instanceid]);
         } else {
             // Existing cards in a specific box
             $sql = "SELECT c.*
-                      FROM {leitbox_cards} c
-                      JOIN {leitbox_progress} p ON c.id = p.cardid
-                     WHERE c.leitboxid = :instanceid
+                      FROM {adaptivereview_cards} c
+                      JOIN {adaptivereview_progress} p ON c.id = p.cardid
+                     WHERE c.adaptivereviewid = :instanceid
                        AND p.userid = :userid
                        AND p.box_number = :boxnumber
                        $order_by";
@@ -161,7 +161,7 @@ class external extends external_api {
             // multilingual even though they are stored as plain keys in the DB.
             $resolve = function($text) {
                 if (preg_match('/^##(demo_[a-z0-9]+)##$/', $text, $m)) {
-                    return get_string($m[1], 'mod_leitbox');
+                    return get_string($m[1], 'mod_adaptivereview');
                 }
                 return $text;
             };
@@ -175,7 +175,7 @@ class external extends external_api {
         }
 
         // Apply random shuffle if cardorder is 0 (Random)
-        if ($leitbox->cardorder == 0) {
+        if ($adaptivereview->cardorder == 0) {
             shuffle($result);
         }
 
@@ -221,21 +221,21 @@ class external extends external_api {
         ]);
 
         // Security check: get card and ensure it exists and user can access its module.
-        $card = $DB->get_record('leitbox_cards', ['id' => $params['cardid']], '*', MUST_EXIST);
-        $leitbox = $DB->get_record('leitbox', ['id' => $card->leitboxid], '*', MUST_EXIST);
-        $course = $DB->get_record('course', ['id' => $leitbox->course], '*', MUST_EXIST);
+        $card = $DB->get_record('adaptivereview_cards', ['id' => $params['cardid']], '*', MUST_EXIST);
+        $adaptivereview = $DB->get_record('adaptivereview', ['id' => $card->adaptivereviewid], '*', MUST_EXIST);
+        $course = $DB->get_record('course', ['id' => $adaptivereview->course], '*', MUST_EXIST);
         
         // get_coursemodule_from_instance() returns the CM-ID.
         // get_fast_modinfo()->get_cm() requires CM-ID (not Instance-ID!).
-        $cm_raw = get_coursemodule_from_instance('leitbox', $leitbox->id, $course->id, false, MUST_EXIST);
+        $cm_raw = get_coursemodule_from_instance('adaptivereview', $adaptivereview->id, $course->id, false, MUST_EXIST);
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($cm_raw->id); // cm_info object with customdata
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/leitbox:view', $context);
+        require_capability('mod/adaptivereview:view', $context);
 
         $userid = $USER->id;
-        $progress = $DB->get_record('leitbox_progress', ['userid' => $userid, 'cardid' => $card->id]);
+        $progress = $DB->get_record('adaptivereview_progress', ['userid' => $userid, 'cardid' => $card->id]);
         
         $now = time();
 
@@ -248,7 +248,7 @@ class external extends external_api {
             $progress->count_correct = 0;
             $progress->count_wrong = 0;
             $progress->last_reviewed = $now;
-            $progress->id = $DB->insert_record('leitbox_progress', $progress);
+            $progress->id = $DB->insert_record('adaptivereview_progress', $progress);
         } else {
             $progress->last_reviewed = $now;
         }
@@ -269,7 +269,7 @@ class external extends external_api {
             }
         }
 
-        $DB->update_record('leitbox_progress', $progress);
+        $DB->update_record('adaptivereview_progress', $progress);
 
         // Trigger Moodle's completion API to re-evaluate conditions
         $completion = new \completion_info($course);
@@ -292,7 +292,7 @@ class external extends external_api {
 
     public static function reset_progress_parameters() {
         return new external_function_parameters([
-            'instanceid' => new external_value(PARAM_INT, 'The leitbox instance id'),
+            'instanceid' => new external_value(PARAM_INT, 'The adaptivereview instance id'),
         ]);
     }
 
@@ -303,23 +303,23 @@ class external extends external_api {
             'instanceid' => $instanceid,
         ]);
 
-        $leitbox = $DB->get_record('leitbox', ['id' => $params['instanceid']], '*', MUST_EXIST);
-        $course = $DB->get_record('course', ['id' => $leitbox->course], '*', MUST_EXIST);
+        $adaptivereview = $DB->get_record('adaptivereview', ['id' => $params['instanceid']], '*', MUST_EXIST);
+        $course = $DB->get_record('course', ['id' => $adaptivereview->course], '*', MUST_EXIST);
         
-        $cm_raw = get_coursemodule_from_instance('leitbox', $params['instanceid'], $course->id, false, MUST_EXIST);
+        $cm_raw = get_coursemodule_from_instance('adaptivereview', $params['instanceid'], $course->id, false, MUST_EXIST);
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($cm_raw->id); // cm_info object with customdata
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/leitbox:view', $context);
+        require_capability('mod/adaptivereview:view', $context);
 
         // Get all card IDs belonging to this instance.
-        $cardids = $DB->get_fieldset_select('leitbox_cards', 'id', 'leitboxid = ?', [$params['instanceid']]);
+        $cardids = $DB->get_fieldset_select('adaptivereview_cards', 'id', 'adaptivereviewid = ?', [$params['instanceid']]);
 
         if (!empty($cardids)) {
             list($insql, $inparams) = $DB->get_in_or_equal($cardids);
             $inparams[] = $USER->id;
-            $DB->delete_records_select('leitbox_progress', "cardid $insql AND userid = ?", $inparams);
+            $DB->delete_records_select('adaptivereview_progress', "cardid $insql AND userid = ?", $inparams);
         }
 
         // Ensure completion triggers also run for progress resets

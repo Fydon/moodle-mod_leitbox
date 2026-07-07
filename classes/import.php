@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace mod_leitbox;
+namespace mod_adaptivereview;
 
 defined('MOODLE_INTERNAL') || die();
 

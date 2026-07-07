@@ -22,14 +22,14 @@ export const moodleCall = async (methodname, args) => {
 };
 
 export const getCardsByBox = (boxnumber) => {
-    return moodleCall('mod_leitbox_get_cards_by_box', {
+    return moodleCall('mod_adaptivereview_get_cards_by_box', {
         instanceid: config.instanceid,
         boxnumber
     });
 };
 
 export const getBoxCounts = async () => {
-    const counts = await moodleCall('mod_leitbox_get_box_counts', {
+    const counts = await moodleCall('mod_adaptivereview_get_box_counts', {
         instanceid: config.instanceid
     });
 
@@ -41,16 +41,16 @@ export const getBoxCounts = async () => {
 };
 
 export const submitAnswer = (cardid, rating) => {
-    return moodleCall('mod_leitbox_submit_answer', {
+    return moodleCall('mod_adaptivereview_submit_answer', {
         cardid,
         rating
     });
 };
 
 export const getLogoUrl = () => {
-    return `${config.wwwroot}/mod/leitbox/pix/logo.png`;
+    return `${config.wwwroot}/mod/adaptivereview/pix/logo.png`;
 };
 
 export const resetProgress = (instanceid) => {
-    return moodleCall('mod_leitbox_reset_progress', { instanceid });
+    return moodleCall('mod_adaptivereview_reset_progress', { instanceid });
 };

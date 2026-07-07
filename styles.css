@@ -1,10 +1,10 @@
 /**
- * Moodle Plugin: LeitBox
+ * Moodle Plugin: Adaptive Review
  * Standard Moodle CSS to fix UI issues.
  */
 
 /* Fix distortion of the activity icon in the header */
-.path-mod-leitbox .activity-header .activity-icon {
+.path-mod-adaptivereview .activity-header .activity-icon {
     width: 64px !important;
     height: 64px !important;
     object-fit: contain !important;
@@ -12,7 +12,7 @@
 }
 
 /* Ensure the icon in the breadcrumbs/activity selector is also crisp */
-.path-mod-leitbox .page-header-image img {
+.path-mod-adaptivereview .page-header-image img {
     object-fit: contain !important;
 }
 

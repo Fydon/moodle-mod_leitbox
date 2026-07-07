@@ -109,7 +109,7 @@ const FALLBACKS = {
 
 const getString = (key) => {
     // 1. Try Moodle's loaded strings
-    const moodleStr = window.M?.str?.mod_leitbox?.[key];
+    const moodleStr = window.M?.str?.mod_adaptivereview?.[key];
     // 2. Only use Moodle string if it's valid (not a [[placeholder]])
     if (moodleStr && !moodleStr.startsWith('[[')) return moodleStr;
     // 3. Fall back to hardcoded defaults

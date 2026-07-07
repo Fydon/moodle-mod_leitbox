@@ -15,20 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-$string['modulename'] = 'LeitBox';
-$string['modulename_help'] = 'The LeitBox activity allows students to practice flashcards using a spaced repetition system based on the Leitner method. The UI uses a modern single-page application approach.';
-$string['modulenameplural'] = 'LeitBox';
-$string['pluginadministration'] = 'LeitBox administration';
-$string['pluginname'] = 'LeitBox';
-$string['leitbox:addinstance'] = 'Add a new LeitBox';
-$string['leitbox:view'] = 'View LeitBox';
+$string['modulename'] = 'Adaptive Review';
+$string['modulename_help'] = 'The Adaptive Review activity allows students to practice flashcards using a spaced repetition system based on the Leitner method. The UI uses a modern single-page application approach.';
+$string['modulenameplural'] = 'Adaptive Reviews';
+$string['pluginadministration'] = 'Adaptive Review administration';
+$string['pluginname'] = 'Adaptive Review';
+$string['adaptivereview:addinstance'] = 'Add a new Adaptive Review';
+$string['adaptivereview:view'] = 'View Adaptive Review';
 
-$string['leitboxname'] = 'Activity Name';
-$string['settings'] = 'LeitBox Settings';
+$string['adaptivereviewname'] = 'Activity Name';
+$string['settings'] = 'Adaptive Review Settings';
 $string['completion_min_cards'] = 'Minimum cards answered correctly';
 $string['completion_min_cards_desc'] = 'Student must answer at least this many cards correctly at least once:';
 $string['completion_min_cards_help'] = 'A card counts as "correctly answered" once it has been rated green at least once and is in Box 1 or higher. Cards that were only rated red or yellow do not count.';
@@ -64,16 +64,16 @@ $string['progress_aria'] = 'Progress: {mastered} of {total} cards mastered';
 
 
 // Privacy metadata.
-$string['privacy:metadata:leitbox_progress'] = 'Information about user progress on LeitBox.';
-$string['privacy:metadata:leitbox_progress:userid'] = 'The user ID.';
-$string['privacy:metadata:leitbox_progress:cardid'] = 'The card ID.';
-$string['privacy:metadata:leitbox_progress:box_number'] = 'The Leitner box the card is currently in.';
-$string['privacy:metadata:leitbox_progress:count_correct'] = 'The number of times the user answered the card correctly.';
-$string['privacy:metadata:leitbox_progress:count_wrong'] = 'The number of times the user answered the card incorrectly.';
-$string['privacy:metadata:leitbox_progress:last_reviewed'] = 'The timestamp when the card was last reviewed.';
+$string['privacy:metadata:adaptivereview_progress'] = 'Information about user progress on Adaptive Review.';
+$string['privacy:metadata:adaptivereview_progress:userid'] = 'The user ID.';
+$string['privacy:metadata:adaptivereview_progress:cardid'] = 'The card ID.';
+$string['privacy:metadata:adaptivereview_progress:box_number'] = 'The Leitner box the card is currently in.';
+$string['privacy:metadata:adaptivereview_progress:count_correct'] = 'The number of times the user answered the card correctly.';
+$string['privacy:metadata:adaptivereview_progress:count_wrong'] = 'The number of times the user answered the card incorrectly.';
+$string['privacy:metadata:adaptivereview_progress:last_reviewed'] = 'The timestamp when the card was last reviewed.';
 
 // Management Interface
-$string['demo_q1'] = 'Welcome to LeitBox.<br><br>What is the goal of this learning system?';
+$string['demo_q1'] = 'Welcome to Adaptive Review.<br><br>What is the goal of this learning system?';
 $string['demo_a1'] = 'The goal is to move all flashcards to the final deck ("Expert") by answering them correctly.<br><br>The system uses the method of <b>spaced repetition</b> for this purpose.';
 $string['demo_h1'] = 'Think about how you remember things best long-term.';
 $string['demo_q2'] = 'How do I move a card to the next deck?';
@@ -104,7 +104,7 @@ $string['deleteselected'] = 'Delete selected';
 $string['confirmbulkdelete'] = 'Are you sure you want to delete the selected cards? This action cannot be undone.';
 $string['error_limit_reached'] = 'Limit reached: For didactic reasons, a maximum of 200 cards per set is allowed.';
 $string['error_limit_exceeded_import'] = 'Import failed: The limit of 200 cards would be exceeded. You can only add {$a} more cards to this set.';
-$string['didactic_limit_notice'] = '<strong>Learning Tip:</strong> To ensure optimal learning success and avoid cognitive overload, each activity is limited to <strong>200 cards</strong>. For larger topics, we highly recommend splitting the material across multiple LeitBox activities (e.g., "Chapter 1", "Chapter 2") in your course.';
+$string['didactic_limit_notice'] = '<strong>Learning Tip:</strong> To ensure optimal learning success and avoid cognitive overload, each activity is limited to <strong>200 cards</strong>. For larger topics, we highly recommend splitting the material across multiple Adaptive Review activities (e.g., "Chapter 1", "Chapter 2") in your course.';
 $string['bulkimport'] = 'Bulk Import (AI / Text)';
 $string['bulkimportdesc'] = 'Paste a formatted text block to import multiple cards at once.';
 $string['exportcards'] = 'Export cards (.txt)';
@@ -222,7 +222,7 @@ $string['carddeleted'] = 'Card deleted.';
 $string['confirmdeletecard'] = 'Are you sure you want to delete this card?';
 
 // Vue Frontend App Strings
-$string['dashboardtitle'] = 'Your LeitBox Cards';
+$string['dashboardtitle'] = 'Your Adaptive Review Cards';
 $string['dashboardsbtitle'] = 'Select a learning deck to practice';
 $string['howitworks'] = 'How does this work?';
 $string['cards'] = 'Cards';
@@ -250,13 +250,13 @@ $string['sessiondonedesc'] = 'Good job. Return to the dashboard for the next dec
 $string['feedback_grand_title'] = 'Masterpiece!';
 $string['feedback_grand_desc'] = 'Congratulations! You successfully moved all cards into the Expert deck and reviewed them flawlessly. You have truly mastered this subject!';
 $string['feedback_perfect_title'] = 'Strong Result';
-$string['feedback_perfect_desc'] = 'You correctly leitboxed all of the content. You have a solid grasp of this material.';
+$string['feedback_perfect_desc'] = 'You correctly Adaptive Reviewed all of the content. You have a solid grasp of this material.';
 $string['feedback_good_title'] = 'Solid Performance';
 $string['feedback_good_desc'] = 'You have a good overview. Consistent practice will close the remaining gaps.';
 $string['feedback_okay_title'] = 'On the Right Track';
 $string['feedback_okay_desc'] = 'The foundation is there. Another review session will reinforce your knowledge.';
 $string['feedback_learn_title'] = 'Review Recommended';
-$string['feedback_learn_desc'] = 'Some answers were difficult to leitbox. Use the next round to train these specific topics.';
+$string['feedback_learn_desc'] = 'Some answers were difficult to Adaptive Review. Use the next round to train these specific topics.';
 $string['completed'] = 'Completed';
 $string['error_loading_cards'] = 'Could not load cards. Please check your connection.';
 $string['reset_progress'] = 'Reset Learning Progress';
@@ -266,4 +266,4 @@ $string['reset_progress_btn'] = 'Yes, Reset';
 $string['reset_progress_cancel'] = 'Cancel';
 $string['reset_progress_done'] = 'Learning progress has been reset!';
 
-$string['event_course_module_viewed'] = 'LeitBox activity viewed';
+$string['event_course_module_viewed'] = 'Adaptive Review activity viewed';

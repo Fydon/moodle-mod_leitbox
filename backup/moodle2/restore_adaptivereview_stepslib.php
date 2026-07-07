@@ -15,30 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-class restore_leitbox_activity_structure_step extends restore_activity_structure_step {
+class restore_adaptivereview_activity_structure_step extends restore_activity_structure_step {
 
     protected function define_structure() {
         $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
 
-        $paths[] = new restore_path_element('leitbox', '/activity/leitbox');
-        $paths[] = new restore_path_element('leitbox_card', '/activity/leitbox/cards/card');
+        $paths[] = new restore_path_element('adaptivereview', '/activity/adaptivereview');
+        $paths[] = new restore_path_element('adaptivereview_card', '/activity/adaptivereview/cards/card');
         
         if ($userinfo) {
-            $paths[] = new restore_path_element('leitbox_progress', '/activity/leitbox/cards/card/progresses/progress');
+            $paths[] = new restore_path_element('adaptivereview_progress', '/activity/adaptivereview/cards/card/progresses/progress');
         }
 
         return $this->prepare_activity_structure($paths);
     }
 
-    protected function process_leitbox($data) {
+    protected function process_adaptivereview($data) {
         global $DB;
 
         $data = (object)$data;
@@ -49,24 +49,24 @@ class restore_leitbox_activity_structure_step extends restore_activity_structure
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        // insert the leitbox record.
-        $newitemid = $DB->insert_record('leitbox', $data);
+        // insert the adaptivereview record.
+        $newitemid = $DB->insert_record('adaptivereview', $data);
         $this->apply_activity_instance($newitemid);
     }
 
-    protected function process_leitbox_card($data) {
+    protected function process_adaptivereview_card($data) {
         global $DB;
 
         $data = (object)$data;
         $oldid = $data->id;
 
-        $data->leitboxid = $this->get_new_parentid('leitbox');
+        $data->adaptivereviewid = $this->get_new_parentid('adaptivereview');
 
-        $newitemid = $DB->insert_record('leitbox_cards', $data);
-        $this->set_mapping('leitbox_cards', $oldid, $newitemid);
+        $newitemid = $DB->insert_record('adaptivereview_cards', $data);
+        $this->set_mapping('adaptivereview_cards', $oldid, $newitemid);
     }
 
-    protected function process_leitbox_progress($data) {
+    protected function process_adaptivereview_progress($data) {
         global $DB;
 
         $data = (object)$data;
@@ -78,14 +78,14 @@ class restore_leitbox_activity_structure_step extends restore_activity_structure
             return; // Don't restore if the user isn't found
         }
 
-        $data->cardid = $this->get_new_parentid('leitbox_cards');
+        $data->cardid = $this->get_new_parentid('adaptivereview_cards');
         
-        $newitemid = $DB->insert_record('leitbox_progress', $data);
-        $this->set_mapping('leitbox_progress', $oldid, $newitemid);
+        $newitemid = $DB->insert_record('adaptivereview_progress', $data);
+        $this->set_mapping('adaptivereview_progress', $oldid, $newitemid);
     }
 
     protected function after_execute() {
-        // Add leitbox related files, no need to match by itemname (just internally handled context).
-        $this->add_related_files('mod_leitbox', 'intro', null);
+        // Add adaptivereview related files, no need to match by itemname (just internally handled context).
+        $this->add_related_files('mod_adaptivereview', 'intro', null);
     }
 }

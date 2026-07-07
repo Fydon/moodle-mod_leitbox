@@ -24,11 +24,11 @@ jobs:
           
       - name: Create ZIP Archive via git archive
         run: |
-          git archive --format=zip --prefix=leitbox/ HEAD \
-            -o mod_leitbox_${{ github.ref_name }}.zip
+          git archive --format=zip --prefix=adaptivereview/ HEAD \
+            -o mod_adaptivereview_${{ github.ref_name }}.zip
           
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
-          files: mod_leitbox_${{ github.ref_name }}.zip
+          files: mod_adaptivereview_${{ github.ref_name }}.zip
           generate_release_notes: true

@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'mod/leitbox:addinstance' => [
+    'mod/adaptivereview:addinstance' => [
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
@@ -32,7 +32,7 @@ $capabilities = [
         ],
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ],
-    'mod/leitbox:view' => [
+    'mod/adaptivereview:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => [

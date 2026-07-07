@@ -3,30 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --color-leitbox-teal: #00a693;
-  --color-leitbox-navy: #1d2757;
-  --color-leitbox-teal-light: #e6fcf5;
+  --color-adaptivereview-teal: #00a693;
+  --color-adaptivereview-navy: #1d2757;
+  --color-adaptivereview-teal-light: #e6fcf5;
 }
 
-.path-mod-leitbox .flip-container {
+.path-mod-adaptivereview .flip-container {
   perspective: 1000px;
 }
 
-.path-mod-leitbox .flip-card-inner {
+.path-mod-adaptivereview .flip-card-inner {
   transition: transform 0.6s;
   transform-style: preserve-3d;
 }
 
-.path-mod-leitbox .flip-card-front,
-.path-mod-leitbox .flip-card-back {
+.path-mod-adaptivereview .flip-card-front,
+.path-mod-adaptivereview .flip-card-back {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-.path-mod-leitbox .flip-card-back {
+.path-mod-adaptivereview .flip-card-back {
   transform: rotateY(180deg);
 }
 
-.path-mod-leitbox .flipped>.flip-card-inner {
+.path-mod-adaptivereview .flipped>.flip-card-inner {
   transform: rotateY(180deg);
 }

@@ -1,12 +1,12 @@
 {
-  "name": "mod_leitbox_vue",
+  "name": "mod_adaptivereview_vue",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "docs": "echo 'CRITICAL: The required Moodle deployment ZIP format MUST ALWAYS be mod_leitbox_vX.Y.Z.zip'"
+    "docs": "echo 'CRITICAL: The required Moodle deployment ZIP format MUST ALWAYS be mod_adaptivereview_vX.Y.Z.zip'"
   },
   "dependencies": {
     "vue": "^3.4.0",

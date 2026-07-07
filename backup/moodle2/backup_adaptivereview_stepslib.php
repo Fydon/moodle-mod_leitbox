@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-class backup_leitbox_activity_structure_step extends backup_activity_structure_step {
+class backup_adaptivereview_activity_structure_step extends backup_activity_structure_step {
     protected function define_structure() {
 
         // Define each element separated.
-        $leitbox = new backup_nested_element('leitbox', ['id'], [
-            'course', 'name', 'intro', 'introformat', 'cardorder', 
+        $adaptivereview = new backup_nested_element('adaptivereview', ['id'], [
+            'course', 'name', 'intro', 'introformat', 'cardorder',
             'completion_min_cards', 'completion_min_mastered', 'completion_all_mastered', 'timecreated', 'timemodified'
         ]);
 
@@ -42,27 +42,27 @@ class backup_leitbox_activity_structure_step extends backup_activity_structure_s
         ]);
 
         // Build the tree.
-        $leitbox->add_child($cards);
+        $adaptivereview->add_child($cards);
         $cards->add_child($card);
 
         $card->add_child($progresses);
         $progresses->add_child($progress);
 
         // Define sources.
-        $leitbox->set_source_table('leitbox', ['id' => backup::VAR_ACTIVITYID]);
-        $card->set_source_table('leitbox_cards', ['leitboxid' => backup::VAR_PARENTID]);
+        $adaptivereview->set_source_table('adaptivereview', ['id' => backup::VAR_ACTIVITYID]);
+        $card->set_source_table('adaptivereview_cards', ['adaptivereviewid' => backup::VAR_PARENTID]);
 
         // Export user progress only if userinfo is included in the backup.
         if ($this->get_setting_value('userinfo')) {
-            $progress->set_source_table('leitbox_progress', ['cardid' => backup::VAR_PARENTID]);
+            $progress->set_source_table('adaptivereview_progress', ['cardid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations to ensure accurate restoration of users and contexts.
         $progress->annotate_ids('user', 'userid');
 
         // Annotate file areas (intro text files).
-        $leitbox->annotate_files('mod_leitbox', 'intro', null); // Intro might have embedded images
+        $adaptivereview->annotate_files('mod_adaptivereview', 'intro', null); // Intro might have embedded images
 
-        return $this->prepare_activity_structure($leitbox);
+        return $this->prepare_activity_structure($adaptivereview);
     }
 }

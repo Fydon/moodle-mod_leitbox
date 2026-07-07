@@ -175,7 +175,7 @@ const loadCounts = async () => {
 
 const FALLBACKS = {
     // Header
-    dashboardtitle: 'Deine LeitBox Karten',
+    dashboardtitle: 'Deine Adaptive Review Karten',
     dashboardsbtitle: 'Wähle einen Lernstapel zum Üben aus',
     howitworks: 'Wie funktioniert das?',
     cards: 'Karten',
@@ -211,7 +211,7 @@ const FALLBACKS = {
 
 const getString = (key) => {
     // 1. Try Moodle's loaded strings
-    const moodleStr = window.M?.str?.mod_leitbox?.[key];
+    const moodleStr = window.M?.str?.mod_adaptivereview?.[key];
     // 2. Only use Moodle string if it's valid (not a [[placeholder]])
     if (moodleStr && !moodleStr.startsWith('[[')) return moodleStr;
     // 3. Fall back to hardcoded defaults
@@ -241,7 +241,7 @@ const doReset = async () => {
     resetSuccess.value = false;
     resetError.value = '';
     try {
-        const appConfig = JSON.parse(document.getElementById('v-app-mod-leitbox')?.dataset?.config || '{}');
+        const appConfig = JSON.parse(document.getElementById('v-app-mod-adaptivereview')?.dataset?.config || '{}');
         await resetProgress(appConfig.instanceid);
         await loadCounts();
         showReset.value = false;

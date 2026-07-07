@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -23,17 +23,17 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/leitbox/backup/moodle2/backup_leitbox_stepslib.php');
+require_once($CFG->dirroot . '/mod/adaptivereview/backup/moodle2/backup_adaptivereview_stepslib.php');
 
-class backup_leitbox_activity_task extends backup_activity_task {
+class backup_adaptivereview_activity_task extends backup_activity_task {
 
     protected function define_my_settings() {
         // No particular settings for this activity.
     }
 
     protected function define_my_steps() {
-        // Add the leitbox structure step.
-        $this->add_step(new backup_leitbox_activity_structure_step('leitbox_structure', 'leitbox.xml'));
+        // Add the adaptivereview structure step.
+        $this->add_step(new backup_adaptivereview_activity_structure_step('adaptivereview_structure', 'adaptivereview.xml'));
     }
 
     static public function encode_content_links($content) {
@@ -41,13 +41,13 @@ class backup_leitbox_activity_task extends backup_activity_task {
 
         $base = preg_quote($CFG->wwwroot, "/");
 
-        // Link to the list of leitbox.
-        $search = "/(" . $base . "\/mod\/leitbox\/index.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@LEITBOXINDEX*$2@$', $content);
+        // Link to the list of adaptivereview.
+        $search = "/(" . $base . "\/mod\/adaptivereview\/index.php\?id\=)([0-9]+)/";
+        $content = preg_replace($search, '$@ADAPTIVEREVIEWINDEX*$2@$', $content);
 
-        // Link to leitbox view by moduleid.
-        $search = "/(" . $base . "\/mod\/leitbox\/view.php\?id\=)([0-9]+)/";
-        $content = preg_replace($search, '$@LEITBOXVIEWBYID*$2@$', $content);
+        // Link to adaptivereview view by moduleid.
+        $search = "/(" . $base . "\/mod\/adaptivereview\/view.php\?id\=)([0-9]+)/";
+        $content = preg_replace($search, '$@ADAPTIVEREVIEWVIEWBYID*$2@$', $content);
 
         return $content;
     }

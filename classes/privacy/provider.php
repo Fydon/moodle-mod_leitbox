@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace mod_leitbox\privacy;
+namespace mod_adaptivereview\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\contextlist;
@@ -36,16 +36,16 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
 
     public static function get_metadata(collection $collection) : collection {
         $collection->add_database_table(
-            'leitbox_progress',
+            'adaptivereview_progress',
             [
-                'userid' => 'privacy:metadata:leitbox_progress:userid',
-                'cardid' => 'privacy:metadata:leitbox_progress:cardid',
-                'box_number' => 'privacy:metadata:leitbox_progress:box_number',
-                'count_correct' => 'privacy:metadata:leitbox_progress:count_correct',
-                'count_wrong' => 'privacy:metadata:leitbox_progress:count_wrong',
-                'last_reviewed' => 'privacy:metadata:leitbox_progress:last_reviewed',
+                'userid' => 'privacy:metadata:adaptivereview_progress:userid',
+                'cardid' => 'privacy:metadata:adaptivereview_progress:cardid',
+                'box_number' => 'privacy:metadata:adaptivereview_progress:box_number',
+                'count_correct' => 'privacy:metadata:adaptivereview_progress:count_correct',
+                'count_wrong' => 'privacy:metadata:adaptivereview_progress:count_wrong',
+                'last_reviewed' => 'privacy:metadata:adaptivereview_progress:last_reviewed',
             ],
-            'privacy:metadata:leitbox_progress'
+            'privacy:metadata:adaptivereview_progress'
         );
         return $collection;
     }
@@ -56,12 +56,12 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
                   FROM {context} c
                   JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
                   JOIN {modules} m ON m.name = :modname AND m.id = cm.module
-                  JOIN {leitbox} r ON r.id = cm.instance
-                  JOIN {leitbox_cards} rc ON rc.leitboxid = r.id
-                  JOIN {leitbox_progress} rp ON rp.cardid = rc.id
+                  JOIN {adaptivereview} r ON r.id = cm.instance
+                  JOIN {adaptivereview_cards} rc ON rc.adaptivereviewid = r.id
+                  JOIN {adaptivereview_progress} rp ON rp.cardid = rc.id
                  WHERE rp.userid = :userid";
         $params = [
-            'modname' => 'leitbox',
+            'modname' => 'adaptivereview',
             'contextlevel' => CONTEXT_MODULE,
             'userid' => $userid,
         ];
@@ -78,13 +78,13 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
         $sql = "SELECT rp.userid
                   FROM {course_modules} cm
                   JOIN {modules} m ON m.name = :modname AND m.id = cm.module
-                  JOIN {leitbox} r ON r.id = cm.instance
-                  JOIN {leitbox_cards} rc ON rc.leitboxid = r.id
-                  JOIN {leitbox_progress} rp ON rp.cardid = rc.id
+                  JOIN {adaptivereview} r ON r.id = cm.instance
+                  JOIN {adaptivereview_cards} rc ON rc.adaptivereviewid = r.id
+                  JOIN {adaptivereview_progress} rp ON rp.cardid = rc.id
                  WHERE cm.id = :cmid";
         
         $params = [
-            'modname' => 'leitbox',
+            'modname' => 'adaptivereview',
             'cmid' => $context->instanceid
         ];
         
@@ -100,15 +100,15 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
             if ($context->contextlevel == CONTEXT_MODULE) {
-                $cm = get_coursemodule_from_id('leitbox', $context->instanceid);
+                $cm = get_coursemodule_from_id('adaptivereview', $context->instanceid);
                 if (!$cm) {
                     continue;
                 }
 
                 $sql = "SELECT rp.*, rc.question, rc.answer
-                          FROM {leitbox_progress} rp
-                          JOIN {leitbox_cards} rc ON rc.id = rp.cardid
-                         WHERE rc.leitboxid = ? AND rp.userid = ?";
+                          FROM {adaptivereview_progress} rp
+                          JOIN {adaptivereview_cards} rc ON rc.id = rp.cardid
+                         WHERE rc.adaptivereviewid = ? AND rp.userid = ?";
                 $progress_records = $DB->get_records_sql($sql, [$cm->instance, $userid]);
 
                 if (!empty($progress_records)) {
@@ -125,7 +125,7 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
                     }
                     
                     \core_privacy\local\request\writer::with_context($context)->export_data(
-                        [get_string('pluginname', 'mod_leitbox'), get_string('cards', 'mod_leitbox')],
+                        [get_string('pluginname', 'mod_adaptivereview'), get_string('cards', 'mod_adaptivereview')],
                         (object)['progress' => $exportdata]
                     );
                 }
@@ -139,12 +139,12 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
             return;
         }
 
-        if ($cm = get_coursemodule_from_id('leitbox', $context->instanceid)) {
+        if ($cm = get_coursemodule_from_id('adaptivereview', $context->instanceid)) {
             $sql = "SELECT p.id 
-                      FROM {leitbox_progress} p
-                      JOIN {leitbox_cards} c ON c.id = p.cardid
-                     WHERE c.leitboxid = ?";
-            $DB->delete_records_select('leitbox_progress', "id IN ($sql)", [$cm->instance]);
+                      FROM {adaptivereview_progress} p
+                      JOIN {adaptivereview_cards} c ON c.id = p.cardid
+                     WHERE c.adaptivereviewid = ?";
+            $DB->delete_records_select('adaptivereview_progress', "id IN ($sql)", [$cm->instance]);
         }
     }
 
@@ -157,12 +157,12 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
             if ($context->contextlevel == CONTEXT_MODULE) {
-                if ($cm = get_coursemodule_from_id('leitbox', $context->instanceid)) {
+                if ($cm = get_coursemodule_from_id('adaptivereview', $context->instanceid)) {
                     $sql = "SELECT p.id 
-                              FROM {leitbox_progress} p
-                              JOIN {leitbox_cards} c ON c.id = p.cardid
-                             WHERE c.leitboxid = ? AND p.userid = ?";
-                    $DB->delete_records_select('leitbox_progress', "id IN ($sql)", [$cm->instance, $userid]);
+                              FROM {adaptivereview_progress} p
+                              JOIN {adaptivereview_cards} c ON c.id = p.cardid
+                             WHERE c.adaptivereviewid = ? AND p.userid = ?";
+                    $DB->delete_records_select('adaptivereview_progress', "id IN ($sql)", [$cm->instance, $userid]);
                 }
             }
         }
@@ -180,17 +180,17 @@ class provider implements metadata_provider, plugin_provider, core_userlist_prov
             return;
         }
 
-        if ($cm = get_coursemodule_from_id('leitbox', $context->instanceid)) {
+        if ($cm = get_coursemodule_from_id('adaptivereview', $context->instanceid)) {
             list($insql, $inparams) = $DB->get_in_or_equal($userids);
             
             $sql = "SELECT p.id 
-                      FROM {leitbox_progress} p
-                      JOIN {leitbox_cards} c ON c.id = p.cardid
-                     WHERE c.leitboxid = ? AND p.userid $insql";
+                      FROM {adaptivereview_progress} p
+                      JOIN {adaptivereview_cards} c ON c.id = p.cardid
+                     WHERE c.adaptivereviewid = ? AND p.userid $insql";
             
             $params = array_merge([$cm->instance], $inparams);
             
-            $DB->delete_records_select('leitbox_progress', "id IN ($sql)", $params);
+            $DB->delete_records_select('adaptivereview_progress', "id IN ($sql)", $params);
         }
     }
 }

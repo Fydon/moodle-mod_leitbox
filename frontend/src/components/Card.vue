@@ -74,7 +74,7 @@ const FALLBACKS = {
 };
 
 const getString = (key) => {
-    const moodleStr = window.M?.str?.mod_leitbox?.[key];
+    const moodleStr = window.M?.str?.mod_adaptivereview?.[key];
     if (moodleStr && !moodleStr.startsWith('[[')) return moodleStr;
     return FALLBACKS[key] ?? key;
 };

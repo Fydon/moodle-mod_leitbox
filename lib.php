@@ -15,75 +15,75 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Adds a new leitbox instance
+ * Adds a new adaptivereview instance
  *
- * @param stdClass $leitbox
+ * @param stdClass $adaptivereview
  * @return int The instance ID
  */
-function leitbox_add_instance($leitbox) {
+function adaptivereview_add_instance($adaptivereview) {
     global $DB;
-    $leitbox->timecreated = time();
-    $leitbox->timemodified = $leitbox->timecreated;
-    $id = $DB->insert_record('leitbox', $leitbox);
+    $adaptivereview->timecreated = time();
+    $adaptivereview->timemodified = $adaptivereview->timecreated;
+    $id = $DB->insert_record('adaptivereview', $adaptivereview);
 
     // Insert tutorial demo cards using language-neutral marker keys.
     // The markers (e.g. ##demo_q1##) are resolved to the user's language
     // at display time in external.php, so the correct language is always shown.
     $demo_cards = [
-        ['leitboxid' => $id, 'category' => 'demo', 'question' => '##demo_q1##', 'answer' => '##demo_a1##', 'hint' => '##demo_h1##'],
-        ['leitboxid' => $id, 'category' => 'demo', 'question' => '##demo_q2##', 'answer' => '##demo_a2##', 'hint' => '##demo_h2##'],
-        ['leitboxid' => $id, 'category' => 'demo', 'question' => '##demo_q3##', 'answer' => '##demo_a3##', 'hint' => '##demo_h3##'],
-        ['leitboxid' => $id, 'category' => 'demo', 'question' => '##demo_q4##', 'answer' => '##demo_a4##', 'hint' => '##demo_h4##'],
-        ['leitboxid' => $id, 'category' => 'demo', 'question' => '##demo_q5##', 'answer' => '##demo_a5##', 'hint' => '##demo_h5##'],
+        ['adaptivereviewid' => $id, 'category' => 'demo', 'question' => '##demo_q1##', 'answer' => '##demo_a1##', 'hint' => '##demo_h1##'],
+        ['adaptivereviewid' => $id, 'category' => 'demo', 'question' => '##demo_q2##', 'answer' => '##demo_a2##', 'hint' => '##demo_h2##'],
+        ['adaptivereviewid' => $id, 'category' => 'demo', 'question' => '##demo_q3##', 'answer' => '##demo_a3##', 'hint' => '##demo_h3##'],
+        ['adaptivereviewid' => $id, 'category' => 'demo', 'question' => '##demo_q4##', 'answer' => '##demo_a4##', 'hint' => '##demo_h4##'],
+        ['adaptivereviewid' => $id, 'category' => 'demo', 'question' => '##demo_q5##', 'answer' => '##demo_a5##', 'hint' => '##demo_h5##'],
     ];
 
     foreach ($demo_cards as $card) {
-        $DB->insert_record('leitbox_cards', (object)$card);
+        $DB->insert_record('adaptivereview_cards', (object)$card);
     }
 
     return $id;
 }
 
 /**
- * Updates an existing leitbox instance
+ * Updates an existing adaptivereview instance
  *
- * @param stdClass $leitbox
+ * @param stdClass $adaptivereview
  * @return bool
  */
-function leitbox_update_instance($leitbox) {
+function adaptivereview_update_instance($adaptivereview) {
     global $DB;
-    $leitbox->timemodified = time();
-    $leitbox->id = $leitbox->instance;
-    return $DB->update_record('leitbox', $leitbox);
+    $adaptivereview->timemodified = time();
+    $adaptivereview->id = $adaptivereview->instance;
+    return $DB->update_record('adaptivereview', $adaptivereview);
 }
 
 /**
- * Deletes a leitbox instance
+ * Deletes a adaptivereview instance
  *
  * @param int $id The instance ID
  * @return bool
  */
-function leitbox_delete_instance($id) {
+function adaptivereview_delete_instance($id) {
     global $DB;
-    if (!$leitbox = $DB->get_record('leitbox', ['id' => $id])) {
+    if (!$adaptivereview = $DB->get_record('adaptivereview', ['id' => $id])) {
         return false;
     }
     
-    $sql = "SELECT id FROM {leitbox_cards} WHERE leitboxid = ?";
+    $sql = "SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = ?";
     if ($cards = $DB->get_records_sql($sql, [$id])) {
         list($in, $params) = $DB->get_in_or_equal(array_keys($cards));
-        $DB->delete_records_select('leitbox_progress', "cardid $in", $params);
+        $DB->delete_records_select('adaptivereview_progress', "cardid $in", $params);
     }
     
-    $DB->delete_records('leitbox_cards', ['leitboxid' => $id]);
-    $DB->delete_records('leitbox', ['id' => $id]);
+    $DB->delete_records('adaptivereview_cards', ['adaptivereviewid' => $id]);
+    $DB->delete_records('adaptivereview', ['id' => $id]);
     return true;
 }
 
@@ -93,7 +93,7 @@ function leitbox_delete_instance($id) {
  * @param string $feature
  * @return mixed
  */
-function leitbox_supports($feature) {
+function adaptivereview_supports($feature) {
     switch($feature) {
         case FEATURE_MOD_INTRO: return true;
         case FEATURE_SHOW_DESCRIPTION: return true;
@@ -112,32 +112,32 @@ function leitbox_supports($feature) {
  * @param stdClass $coursemodule
  * @return cached_cm_info|false
  */
-function leitbox_get_coursemodule_info($coursemodule) {
+function adaptivereview_get_coursemodule_info($coursemodule) {
     global $DB;
 
-    $leitbox = $DB->get_record('leitbox', ['id' => $coursemodule->instance],
+    $adaptivereview = $DB->get_record('adaptivereview', ['id' => $coursemodule->instance],
         'id, name, completion_min_cards, completion_min_mastered, completion_all_mastered');
-    if (!$leitbox) {
+    if (!$adaptivereview) {
         return false;
     }
 
     $result = new cached_cm_info();
-    $result->name = $leitbox->name;
+    $result->name = $adaptivereview->name;
 
     // Only write ACTIVE rules (value > 0) to customdata for automatic completion.
     // Moodle evaluates get_state() for EVERY rule in customcompletionrules and expects
     // ALL to return COMPLETE. Inactive rules (value = 0) must NOT be in the array –
     // otherwise they permanently block completion.
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
-        if (!empty($leitbox->completion_min_cards)) {
+        if (!empty($adaptivereview->completion_min_cards)) {
             $result->customdata['customcompletionrules']['completion_min_cards'] =
-                (int)$leitbox->completion_min_cards;
+                (int)$adaptivereview->completion_min_cards;
         }
-        if (!empty($leitbox->completion_min_mastered)) {
+        if (!empty($adaptivereview->completion_min_mastered)) {
             $result->customdata['customcompletionrules']['completion_min_mastered'] =
-                (int)$leitbox->completion_min_mastered;
+                (int)$adaptivereview->completion_min_mastered;
         }
-        if (!empty($leitbox->completion_all_mastered)) {
+        if (!empty($adaptivereview->completion_all_mastered)) {
             $result->customdata['customcompletionrules']['completion_all_mastered'] = 1;
         }
     }
@@ -151,7 +151,7 @@ function leitbox_get_coursemodule_info($coursemodule) {
  *
  * @return array Array of rule name strings
  */
-function leitbox_get_custom_completion_rules() {
+function adaptivereview_get_custom_completion_rules() {
     return ['completion_min_cards', 'completion_min_mastered', 'completion_all_mastered'];
 }
 
@@ -162,17 +162,17 @@ function leitbox_get_custom_completion_rules() {
  * @param cm_info $cm
  * @return array
  */
-function leitbox_get_completion_active_rule_descriptions($course, $cm) {
+function adaptivereview_get_completion_active_rule_descriptions($course, $cm) {
     $rules = [];
     if (!empty($cm->customdata['customcompletionrules']['completion_min_cards'])) {
-        $rules[] = get_string('completion_min_cards_desc', 'mod_leitbox') . ' ' . $cm->customdata['customcompletionrules']['completion_min_cards'];
+        $rules[] = get_string('completion_min_cards_desc', 'mod_adaptivereview') . ' ' . $cm->customdata['customcompletionrules']['completion_min_cards'];
     }
     if (!empty($cm->customdata['customcompletionrules']['completion_min_mastered'])) {
-        $rules[] = get_string('completion_min_mastered_desc', 'mod_leitbox') . ' ' . $cm->customdata['customcompletionrules']['completion_min_mastered'];
+        $rules[] = get_string('completion_min_mastered_desc', 'mod_adaptivereview') . ' ' . $cm->customdata['customcompletionrules']['completion_min_mastered'];
     }
 
     if (!empty($cm->customdata['customcompletionrules']['completion_all_mastered'])) {
-        $rules[] = get_string('completion_all_mastered', 'mod_leitbox');
+        $rules[] = get_string('completion_all_mastered', 'mod_adaptivereview');
     }
     return $rules;
 }
@@ -180,18 +180,18 @@ function leitbox_get_completion_active_rule_descriptions($course, $cm) {
 
 
 /**
- * Extends the settings navigation for the leitbox module.
+ * Extends the settings navigation for the adaptivereview module.
  *
  * @param settings_navigation $settings
- * @param navigation_node $leitboxnode
+ * @param navigation_node $adaptivereviewnode
  */
-function leitbox_extend_settings_navigation(settings_navigation $settings, navigation_node $leitboxnode) {
+function adaptivereview_extend_settings_navigation(settings_navigation $settings, navigation_node $adaptivereviewnode) {
     global $PAGE;
 
     if (has_capability('moodle/course:manageactivities', $PAGE->cm->context)) {
-        $url = new moodle_url('/mod/leitbox/manage.php', ['id' => $PAGE->cm->id]);
-        $leitboxnode->add(
-            get_string('managecards', 'mod_leitbox'),
+        $url = new moodle_url('/mod/adaptivereview/manage.php', ['id' => $PAGE->cm->id]);
+        $adaptivereviewnode->add(
+            get_string('managecards', 'mod_adaptivereview'),
             $url,
             navigation_node::TYPE_SETTING,
             null,

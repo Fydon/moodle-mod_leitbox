@@ -14,15 +14,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AMD module for the LeitBox manage cards page.
+ * AMD module for the Adaptive Review manage cards page.
  *
  * Handles:
  * - AI prompt type selector (updates pre-formatted prompt display)
  * - Select-all checkbox toggle for bulk deletion
  * - Delete confirmation dialogs (single and bulk)
  *
- * @module     mod_leitbox/manage
- * @package    mod_leitbox
+ * @module     mod_adaptivereview/manage
+ * @package    mod_adaptivereview
  * @copyright  2026 Peter Pleimfeldner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -46,8 +46,8 @@ define([], function() {
             }
 
             // --- Prompt type selector ---
-            var selector = document.getElementById('leitbox-prompt-selector');
-            var display  = document.getElementById('leitbox-prompt-display');
+            var selector = document.getElementById('adaptivereview-prompt-selector');
+            var display  = document.getElementById('adaptivereview-prompt-display');
             if (selector && display) {
                 selector.addEventListener('change', function() {
                     var key = selector.value;
@@ -64,10 +64,10 @@ define([], function() {
             }
 
             // --- Select-all checkbox ---
-            var selectAll = document.getElementById('leitbox-selectall');
+            var selectAll = document.getElementById('adaptivereview-selectall');
             if (selectAll) {
                 selectAll.addEventListener('change', function(e) {
-                    var checkboxes = document.querySelectorAll('.leitbox-cardcheckbox');
+                    var checkboxes = document.querySelectorAll('.adaptivereview-cardcheckbox');
                     checkboxes.forEach(function(cb) {
                         cb.checked = e.target.checked;
                     });
@@ -77,7 +77,7 @@ define([], function() {
             // --- Single card delete confirmation ---
             // Uses window.confirm() (synchronous, modal-blocking) to guarantee the dialog
             // stays open until the user responds, independent of Moodle's async modal stack.
-            document.querySelectorAll('.leitbox-delete-card').forEach(function(link) {
+            document.querySelectorAll('.adaptivereview-delete-card').forEach(function(link) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     if (window.confirm(params.confirmDelete)) {
@@ -87,7 +87,7 @@ define([], function() {
             });
 
             // --- Bulk delete confirmation ---
-            var bulkForm = document.getElementById('leitbox-bulkdelete-form');
+            var bulkForm = document.getElementById('adaptivereview-bulkdelete-form');
             if (bulkForm) {
                 bulkForm.addEventListener('submit', function(e) {
                     e.preventDefault();

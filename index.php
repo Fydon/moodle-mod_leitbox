@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * List of all leitbox instances in a course.
+ * List of all adaptivereview instances in a course.
  *
- * @package   mod_leitbox
+ * @package   mod_adaptivereview
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,16 +30,16 @@ $course = $DB->get_record('course', ['id' => $id], '*', MUST_EXIST);
 
 require_course_login($course);
 
-$PAGE->set_url('/mod/leitbox/index.php', ['id' => $id]);
+$PAGE->set_url('/mod/adaptivereview/index.php', ['id' => $id]);
 $PAGE->set_title(format_string($course->fullname));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->navbar->add(get_string('modulenameplural', 'mod_leitbox'));
+$PAGE->navbar->add(get_string('modulenameplural', 'mod_adaptivereview'));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('modulenameplural', 'mod_leitbox'));
+echo $OUTPUT->heading(get_string('modulenameplural', 'mod_adaptivereview'));
 
-if (!$leitboxes = get_all_instances_in_course('leitbox', $course)) {
-    notice(get_string('thereareno', 'moodle', get_string('modulenameplural', 'mod_leitbox')),
+if (!$adaptivereviews = get_all_instances_in_course('adaptivereview', $course)) {
+    notice(get_string('thereareno', 'moodle', get_string('modulenameplural', 'mod_adaptivereview')),
         new moodle_url('/course/view.php', ['id' => $course->id]));
 }
 
@@ -52,13 +52,13 @@ $table->head  = [
 ];
 $table->align = ['center', 'left'];
 
-foreach ($leitboxes as $leitbox) {
+foreach ($adaptivereviews as $adaptivereview) {
     $link = html_writer::link(
-        new moodle_url('/mod/leitbox/view.php', ['id' => $leitbox->coursemodule]),
-        format_string($leitbox->name, true)
+        new moodle_url('/mod/adaptivereview/view.php', ['id' => $adaptivereview->coursemodule]),
+        format_string($adaptivereview->name, true)
     );
     $table->data[] = [
-        $leitbox->section,
+        $adaptivereview->section,
         $link,
     ];
 }
