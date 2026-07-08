@@ -1,16 +1,13 @@
 <template>
   <div class="rc-wrap">
 
-    <!-- ═══ HEADER ═══ -->
+   <!-- ═══ HEADER ═══ -->
     <header class="rc-header" role="banner">
-      <div class="rc-header-brand">
-        <img :src="getLogoUrl()" alt="LeitBox" class="rc-logo" />
-        <div class="rc-header-text">
-          <h1 class="rc-title" style="margin-bottom: 4px;">{{ getString('dashboardtitle') }}</h1>
-          <p class="rc-subtitle">{{ getString('dashboardsbtitle') }}</p>
-        </div>
+      <div class="rc-header-text">
+        <h1 class="rc-title" style="margin-bottom: 4px;">{{ getString('dashboardtitle') }}</h1>
+        <p class="rc-subtitle">{{ getString('dashboardsbtitle') }}</p>
       </div>
-      
+
       <div class="rc-header-actions">
         <button @click="showInfo = true" class="rc-btn rc-btn--ghost rc-btn--sm" :aria-label="getString('howitworks')">
           <svg aria-hidden="true" class="rc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,19 +22,11 @@
       </div>
     </header>
 
-    <!-- ═══ PROGRESS BAR ═══ -->
-    <div class="rc-progress-bar" role="progressbar" :aria-valuemin="0" :aria-valuemax="totalCards" :aria-valuenow="masteredCards" :aria-label="getString('progress_aria').replace('{mastered}', masteredCards).replace('{total}', totalCards)">
-      <div class="rc-progress-fill" :style="{ width: progressPercent + '%' }"></div>
-    </div>
-    <p class="rc-progress-label" aria-hidden="true">
-      <span v-if="totalCards > 0">{{ masteredCards }}/{{ totalCards }} {{ getString('progress_label') }}</span>
-    </p>
-
     <!-- ═══ BOX GRID ═══ -->
     <main>
       <div class="rc-grid" role="list">
         <div
-          v-for="box in 6"
+          v-for="box in 4"
           :key="box"
           @click="startSession(box - 1)"
           @keydown.enter.space.prevent="startSession(box - 1)"
@@ -52,7 +41,7 @@
           <div class="rc-box-stripe" aria-hidden="true"></div>
 
           <!-- emoji -->
-          <div class="rc-box-emoji" aria-hidden="true">{{ getBoxEmoji(box - 1) }}</div>
+          <div class="rc-box-icon" aria-hidden="true" v-html="getBoxIcon(box - 1)"></div>
 
           <!-- name -->
           <h2 class="rc-box-name">{{ getBoxName(box - 1) }}</h2>
@@ -83,7 +72,7 @@
       <Transition name="rc-fade">
         <div v-if="showInfo" class="rc-overlay" @click.self="showInfo = false" role="dialog" aria-modal="true" :aria-label="getString('systemtitle')">
           <div class="rc-modal rc-modal-flex">
-            <button @click="showInfo = false" class="rc-modal-close" :aria-label="'Schließen'">×</button>
+            <button @click="showInfo = false" class="rc-modal-close" :aria-label="'Close'">×</button>
             <div class="rc-modal-head rc-modal-px rc-modal-pt" style="margin-bottom: 14px;">
               <span aria-hidden="true">🎓</span>
               <h2 style="margin: 0;">{{ getString('systemtitle') }}</h2>
@@ -121,7 +110,7 @@
       <Transition name="rc-fade">
         <div v-if="showReset" class="rc-overlay" @click.self="showReset = false" role="alertdialog" aria-modal="true" :aria-label="getString('reset_progress_confirm_title')">
           <div class="rc-modal rc-modal-flex rc-modal--warning">
-            <button @click="showReset = false" class="rc-modal-close" :aria-label="'Abbrechen'">×</button>
+            <button @click="showReset = false" class="rc-modal-close" :aria-label="'Cancel'">×</button>
             <div class="rc-modal-scroll rc-modal-px rc-modal-pt rc-modal-pb">
               <div class="rc-modal-head" style="margin-bottom: 14px;">
                 <span aria-hidden="true">⚠️</span>
@@ -164,9 +153,13 @@ const resetting = ref(false);
 const resetSuccess = ref(false);
 const resetError = ref('');
 
-const totalCards = computed(() => Object.values(counts.value).reduce((s, v) => s + (v || 0), 0));
-const masteredCards = computed(() => counts.value[5] || 0);
-const progressPercent = computed(() => totalCards.value > 0 ? Math.round((masteredCards.value / totalCards.value) * 100) : 0);
+const totalCards = computed(() => {
+    if (typeof counts.value[3] === 'number') {
+        return counts.value[3];
+    }
+
+    return Object.values(counts.value).reduce((s, v) => s + (v || 0), 0);
+});
 
 const loadCounts = async () => {
     try { counts.value = await getBoxCounts(); }
@@ -175,38 +168,38 @@ const loadCounts = async () => {
 
 const FALLBACKS = {
     // Header
-    dashboardtitle: 'Deine Adaptive Review Karten',
-    dashboardsbtitle: 'Wähle einen Lernstapel zum Üben aus',
-    howitworks: 'Wie funktioniert das?',
-    cards: 'Karten',
-    loadingcards: 'Karten werden geladen...',
-    progress_label: 'Karten in Stufe Experte',
-    progress_aria: 'Fortschritt: {mastered} von {total} Karten gelernt',
+    dashboardtitle: 'Today\'s Review',
+    dashboardsbtitle: 'Select a category',
+    howitworks: 'How does Adaptive Review work?',
+    cards: 'Cards',
+    loadingcards: 'Loading cards...',
+    progress_label: 'Cards meeting the goal',
+    progress_aria: 'Progress: {mastered} of {total} cards have reached the mastery goal',
     // Box levels
-    box0: 'Neu',
-    box1: 'Einsteiger',
-    box2: 'Lernender',
-    box3: 'Fortgeschritten',
-    box4: 'Erfahren',
-    box5: 'Experte',
+    box0: 'New',
+    box1: 'Beginner',
+    box2: 'Learner',
+    box3: 'Advanced',
+    box4: 'Experienced',
+    box5: 'Review',
     // Info modal
-    systemtitle: 'Das Lernstapel-System',
-    systemintro: 'Dieses Plugin basiert auf der Leitner-Methode – 1972 vom österreichischen Wissenschaftler Sebastian Leitner erfunden und heute weltweit in der Lernforschung anerkannt. Ziel ist es, Karten von links nach rechts in den letzten Stapel zu befördern.',
-    known_btn: 'Gewusst',
-    known_desc: 'Die Karte war einfach! Sie rückt einen Stapel weiter nach rechts.',
-    again_btn: 'Nochmal',
-    again_desc: 'Du warst dir unsicher. Die Karte bleibt im aktuellen Stapel.',
-    hard_btn: 'Schwer',
-    hard_desc: 'Nicht gewusst! Die Karte rückt einen Stapel zurück.',
-    systemtip: '<strong>Tipp:</strong> Beschäftige dich mit den Themen hinter den Karten, die du nicht wusstest – bevor du einen neuen Versuch startest.',
-    gotit: 'Verstanden, los geht\'s!',
+   systemtitle: 'Build Long-Term Mastery',
+    systemintro: 'Adaptive Review helps learners retain knowledge through spaced repetition. New material is introduced gradually, while previously learned material is scheduled for review at the optimal time to strengthen long-term memory.',
+    known_btn: 'I Know It',
+    known_desc: 'Your mastery of this card increases.',
+    again_btn: 'Review Again',
+    again_desc: 'Keep practicing this card before moving on.',
+    hard_btn: 'Needs Work',
+    hard_desc: 'This card will require additional review.',
+    systemtip: '<strong>Tip:</strong> Completing your Due Today review consistently leads to the strongest long-term retention.',
+    gotit: 'Got it!',
     // Reset
-    reset_progress: 'Fortschritt zurücksetzen',
-    reset_progress_confirm_title: 'Lernfortschritt zurücksetzen?',
-    reset_progress_confirm_msg: 'Wirklich zurücksetzen? Dein bisheriger Fortschritt geht dadurch verloren.',
-    reset_progress_btn: 'Ja, zurücksetzen',
-    reset_progress_cancel: 'Abbrechen',
-    reset_progress_done: '✅ Lernfortschritt wurde erfolgreich zurückgesetzt!',
+    reset_progress: 'Reset progress',
+    reset_progress_confirm_title: 'Reset progress?',
+    reset_progress_confirm_msg: 'Are you sure you want to reset your progress? This cannot be undone.',
+    reset_progress_btn: 'Yes, reset progress',
+    reset_progress_cancel: 'Cancel',
+    reset_progress_done: '✅ Progress was reset successfully!',
 };
 
 const getString = (key) => {
@@ -220,17 +213,29 @@ const getString = (key) => {
 
 onMounted(loadCounts);
 
-const getBoxEmoji = (box) => ['🆕','🔁','📖','🔥','💡','🏆'][box] ?? '📦';
-const getBoxName = (box) => getString('box' + box);
+const getBoxIcon = (box) => [
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M12 10c0-4 3-6 7-6 0 4-2 7-7 7"/><path d="M12 12c0-3-2-5-6-5 0 4 2 6 6 6"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>',
+][box] ?? '';
+const getBoxName = (box) => {
+    const names = [
+        getString('queue_due'),
+        getString('queue_new'),
+        getString('queue_recent'),
+        getString('queue_all'),
+    ];
+
+    return names[box] ?? getString('cards');
+};
 
 const getBoxColorClass = (box) => [
-    'rc-box--teal',
-    'rc-box--orange',
-    'rc-box--blue',
-    'rc-box--purple',
-    'rc-box--cyan',
-    'rc-box--gold',
-][box] ?? 'rc-box--teal';
+    'rc-box--blue',     // Due Today
+    'rc-box--orange',   // New
+    'rc-box--green',    // Recently Learned
+    'rc-box--gray',     // All Cards
+][box] ?? 'rc-box--blue';
 
 const startSession = (boxnumber) => {
     if ((counts.value[boxnumber] ?? 0) > 0) emit('start-session', boxnumber, totalCards.value);
@@ -246,7 +251,7 @@ const doReset = async () => {
         await loadCounts();
         showReset.value = false;
     } catch (e) {
-        resetError.value = 'Fehler beim Zurücksetzen: ' + (e.message || 'Unbekannter Fehler');
+        resetError.value = 'Error resetting progress: ' + (e.message || 'Unknown error');
     } finally {
         resetting.value = false;
     }
@@ -283,12 +288,15 @@ const doReset = async () => {
   align-items: center;
   gap: 20px;
 }
-.rc-logo {
-  height: 100px;
-  width: auto;
-  object-fit: contain;
+.rc-wordmark {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1e2a44;
+  line-height: 1;
+  letter-spacing: -0.03em;
   flex-shrink: 0;
-  margin-left: -8px; /* pull closer to left edge */
+  margin-left: -4px;
+  user-select: none;
 }
 .rc-title-row {
   display: flex;
@@ -412,11 +420,17 @@ const doReset = async () => {
 /* ─── grid ──────────────── */
 .rc-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
 }
-@media (max-width: 640px) { .rc-grid { grid-template-columns: repeat(2, 1fr); } }
 
+@media (max-width: 768px) {
+  .rc-grid {
+    grid-template-columns: 1fr;
+  }
+}
 /* ─── box card ──────────────── */
 .rc-box {
   position: relative;
@@ -432,24 +446,52 @@ const doReset = async () => {
   background: var(--teal-pastel);
 }
 
-/* ── colour variants ── */
-.rc-box--teal   { background: #edfdf8; border-color: #b2f0e3; }
-.rc-box--orange { background: #fff7ed; border-color: #fed7aa; }
-.rc-box--blue   { background: #eff6ff; border-color: #bfdbfe; }
-.rc-box--purple { background: #f5f3ff; border-color: #ddd6fe; }
-.rc-box--cyan   { background: #ecfeff; border-color: #a5f3fc; }
-.rc-box--gold   { background: linear-gradient(135deg,#00a693 0%,#1d2757 100%); border-color: transparent; color: #fff; }
+/* ── category colour variants ── */
+.rc-box--blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.rc-box--orange {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.rc-box--green {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.rc-box--gray {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
 
 /* stripe */
 .rc-box-stripe {
-  position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 18px 18px 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 18px 18px 0 0;
 }
-.rc-box--teal   .rc-box-stripe { background: #00a693; }
-.rc-box--orange .rc-box-stripe { background: #f97316; }
-.rc-box--blue   .rc-box-stripe { background: #3b82f6; }
-.rc-box--purple .rc-box-stripe { background: #8b5cf6; }
-.rc-box--cyan   .rc-box-stripe { background: #06b6d4; }
-.rc-box--gold   .rc-box-stripe { background: rgba(255,255,255,0.25); }
+
+.rc-box--blue .rc-box-stripe {
+  background: #3b82f6;
+}
+
+.rc-box--orange .rc-box-stripe {
+  background: #f97316;
+}
+
+.rc-box--green .rc-box-stripe {
+  background: #22c55e;
+}
+
+.rc-box--gray .rc-box-stripe {
+  background: #64748b;
+}
 
 /* active / empty states */
 .rc-box--active:hover {
@@ -464,8 +506,22 @@ const doReset = async () => {
 .rc-box:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .rc-box:focus:not(:focus-visible) { outline: none; }
 
-.rc-box-emoji { font-size: 2.5rem; transition: transform 0.2s; }
-.rc-box--active:hover .rc-box-emoji { transform: scale(1.18); }
+.rc-box-icon {
+  width: 40px;
+  height: 40px;
+  color: currentColor;
+  transition: transform 0.2s;
+  opacity: 0.9;
+}
+
+.rc-box-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rc-box--active:hover .rc-box-icon {
+  transform: scale(1.12);
+}
 
 .rc-box-name {
   font-size: 0.87rem;
@@ -540,7 +596,7 @@ const doReset = async () => {
   display: flex !important;
   flex-direction: column !important;
   padding: 0 !important;
-  overflow: hidden !important; 
+  overflow: hidden !important;
 }
 .rc-modal-scroll {
   overflow-y: auto;

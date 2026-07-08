@@ -31,6 +31,8 @@ use external_value;
 use external_single_structure;
 use external_multiple_structure;
 
+use mod_adaptivereview\local\scheduler;
+
 class external extends external_api {
 
     public static function get_box_counts_parameters() {
@@ -55,41 +57,78 @@ class external extends external_api {
         require_capability('mod/adaptivereview:view', $context);
 
         $userid = $USER->id;
-        $results = [];
+        $instanceid = $params['instanceid'];
+        $now = time();
 
-        // Box 0: Cards with NO progress entry OR box_number = 0
-        $sql_new = "SELECT COUNT(*) AS cnt
-                      FROM {adaptivereview_items} c
-                 LEFT JOIN {adaptivereview_mastery} p ON c.id = p.itemid AND p.userid = :userid
-                     WHERE c.adaptivereviewid = :instanceid
-                       AND (p.id IS NULL OR p.box_number = 0)";
-        $count_new = $DB->count_records_sql($sql_new, ['instanceid' => $params['instanceid'], 'userid' => $userid]);
-        if ($count_new > 0) {
-            $results[] = ['box_number' => 0, 'count' => $count_new];
-        }
+        // Frontend dashboard category IDs:
+        // 0 = Due Today
+        // 1 = New
+        // 2 = Recently Learned
+        // 3 = All Cards
 
-        // Boxes 1-5: Aggregate query
-        $sql_boxes = "SELECT p.box_number, COUNT(*) AS cnt
-                        FROM {adaptivereview_items} c
-                        JOIN {adaptivereview_mastery} p ON c.id = p.itemid
-                       WHERE c.adaptivereviewid = :instanceid
-                         AND p.userid   = :userid
-                         AND p.box_number > 0
-                    GROUP BY p.box_number";
-        $box_counts = $DB->get_records_sql($sql_boxes, ['instanceid' => $params['instanceid'], 'userid' => $userid]);
-        
-        foreach ($box_counts as $box_number => $data) {
-            $results[] = ['box_number' => $box_number, 'count' => $data->cnt];
-        }
+        $count_due = $DB->count_records_sql(
+            "SELECT COUNT(*)
+               FROM {adaptivereview_items} c
+               JOIN {adaptivereview_mastery} p
+                 ON c.id = p.itemid
+              WHERE c.adaptivereviewid = :instanceid
+                AND p.userid = :userid
+                AND p.lastreviewdate > 0
+                AND p.nextreviewdate > 0
+                AND p.nextreviewdate <= :now",
+            [
+                'instanceid' => $instanceid,
+                'userid' => $userid,
+                'now' => $now,
+            ]
+        );
 
-        return $results;
+        $count_new = $DB->count_records_sql(
+            "SELECT COUNT(*)
+               FROM {adaptivereview_items} c
+          LEFT JOIN {adaptivereview_mastery} p
+                 ON c.id = p.itemid AND p.userid = :userid
+              WHERE c.adaptivereviewid = :instanceid
+                AND p.id IS NULL",
+            [
+                'instanceid' => $instanceid,
+                'userid' => $userid,
+            ]
+        );
+
+        $count_recent = $DB->count_records_sql(
+            "SELECT COUNT(*)
+               FROM {adaptivereview_items} c
+               JOIN {adaptivereview_mastery} p
+                 ON c.id = p.itemid
+              WHERE c.adaptivereviewid = :instanceid
+                AND p.userid = :userid
+                AND p.lastreviewdate > 0
+                AND p.nextreviewdate > :now",
+            [
+                'instanceid' => $instanceid,
+                'userid' => $userid,
+                'now' => $now,
+            ]
+        );
+
+        $count_all = $DB->count_records('adaptivereview_items', [
+            'adaptivereviewid' => $instanceid,
+        ]);
+
+        return [
+            ['box_number' => 0, 'count' => $count_due],
+            ['box_number' => 1, 'count' => $count_new],
+            ['box_number' => 2, 'count' => $count_recent],
+            ['box_number' => 3, 'count' => $count_all],
+        ];
     }
 
     public static function get_box_counts_returns() {
         return new external_multiple_structure(
             new external_single_structure([
-                'box_number' => new external_value(PARAM_INT, 'The Leitner box number (0-5)'),
-                'count'      => new external_value(PARAM_INT, 'The number of cards in this box'),
+                'box_number' => new external_value(PARAM_INT, 'The review category number'),
+                'count' => new external_value(PARAM_INT, 'The number of cards in this category'),
             ])
         );
     }
@@ -97,7 +136,7 @@ class external extends external_api {
     public static function get_cards_by_box_parameters() {
         return new external_function_parameters([
             'instanceid' => new external_value(PARAM_INT, 'The adaptivereview instance id'),
-            'boxnumber'  => new external_value(PARAM_INT, 'The Leitner box number (0-5)'),
+            'boxnumber' => new external_value(PARAM_INT, 'The review category number'),
         ]);
     }
 
@@ -118,47 +157,88 @@ class external extends external_api {
         require_capability('mod/adaptivereview:view', $context);
 
         $box = $params['boxnumber'];
-        if ($box < 0 || $box > 5) {
+        if ($box < 0 || $box > 3) {
             throw new \moodle_exception('invalidparameter');
         }
 
         $userid = $USER->id;
         $instanceid = $params['instanceid'];
-        
-        // Fetch instance to read itemorder setting
+        $now = time();
+
         $adaptivereview = $DB->get_record('adaptivereview', ['id' => $instanceid], 'itemorder', MUST_EXIST);
         $order_by = ($adaptivereview->itemorder == 1) ? "ORDER BY c.id ASC" : "";
 
+        $select = "SELECT c.*,
+                        COALESCE(p.masteryscore, 0) AS masteryscore,
+                        COALESCE(p.requiredintervaldays, 0) AS requiredintervaldays,
+                        COALESCE(p.nextreviewdate, 0) AS nextreviewdate,
+                        COALESCE(p.lastreviewdate, 0) AS lastreviewdate";
+
         if ($box == 0) {
-            // New cards: box_number = 0 or no progress record yet
-            $sql = "SELECT c.*
-                      FROM {adaptivereview_items} c
-                 LEFT JOIN {adaptivereview_mastery} p ON c.id = p.itemid AND p.userid = :userid
-                     WHERE c.adaptivereviewid = :instanceid
-                       AND (p.id IS NULL OR p.box_number = 0)
-                       $order_by";
-            $cards = $DB->get_records_sql($sql, ['userid' => $userid, 'instanceid' => $instanceid]);
-        } else {
-            // Existing cards in a specific box
-            $sql = "SELECT c.*
-                      FROM {adaptivereview_items} c
-                      JOIN {adaptivereview_mastery} p ON c.id = p.itemid
-                     WHERE c.adaptivereviewid = :instanceid
-                       AND p.userid = :userid
-                       AND p.box_number = :boxnumber
-                       $order_by";
+            $sql = "$select
+                    FROM {adaptivereview_items} c
+                    JOIN {adaptivereview_mastery} p
+                        ON c.id = p.itemid
+                    WHERE c.adaptivereviewid = :instanceid
+                    AND p.userid = :userid
+                    AND p.lastreviewdate > 0
+                    AND p.nextreviewdate > 0
+                    AND p.nextreviewdate <= :now
+                    $order_by";
+
             $cards = $DB->get_records_sql($sql, [
-                'userid' => $userid, 
-                'instanceid' => $instanceid, 
-                'boxnumber' => $box
+                'userid' => $userid,
+                'instanceid' => $instanceid,
+                'now' => $now,
+            ]);
+
+        } else if ($box == 1) {
+            $sql = "$select
+                    FROM {adaptivereview_items} c
+                LEFT JOIN {adaptivereview_mastery} p
+                        ON c.id = p.itemid AND p.userid = :userid
+                    WHERE c.adaptivereviewid = :instanceid
+                    AND p.id IS NULL
+                    $order_by";
+
+            $cards = $DB->get_records_sql($sql, [
+                'userid' => $userid,
+                'instanceid' => $instanceid,
+            ]);
+
+        } else if ($box == 2) {
+            $sql = "$select
+                    FROM {adaptivereview_items} c
+                    JOIN {adaptivereview_mastery} p
+                        ON c.id = p.itemid
+                    WHERE c.adaptivereviewid = :instanceid
+                    AND p.userid = :userid
+                    AND p.lastreviewdate > 0
+                    AND p.nextreviewdate > :now
+                    $order_by";
+
+            $cards = $DB->get_records_sql($sql, [
+                'userid' => $userid,
+                'instanceid' => $instanceid,
+                'now' => $now,
+            ]);
+
+        } else {
+            $sql = "$select
+                    FROM {adaptivereview_items} c
+                LEFT JOIN {adaptivereview_mastery} p
+                        ON c.id = p.itemid AND p.userid = :userid
+                    WHERE c.adaptivereviewid = :instanceid
+                    $order_by";
+
+            $cards = $DB->get_records_sql($sql, [
+                'userid' => $userid,
+                'instanceid' => $instanceid,
             ]);
         }
 
         $result = [];
         foreach ($cards as $card) {
-            // Resolve language-neutral demo card markers (e.g. ##demo_q1##) to
-            // the user's current Moodle language. This allows demo cards to be
-            // multilingual even though they are stored as plain keys in the DB.
             $resolve = function($text) {
                 if (preg_match('/^##(demo_[a-z0-9]+)##$/', $text, $m)) {
                     return get_string($m[1], 'mod_adaptivereview');
@@ -166,28 +246,20 @@ class external extends external_api {
                 return $text;
             };
             $result[] = [
-                'id'       => $card->id,
+                'id' => $card->id,
                 'question' => $resolve($card->question),
-                'answer'   => $resolve($card->answer),
-                'hint'     => $resolve($card->hint ? $card->hint : ''),
+                'answer' => $resolve($card->answer),
+                'hint' => $resolve($card->hint ? $card->hint : ''),
                 'category' => $card->category ? $card->category : '',
+                'masteryscore' => round((float)$card->masteryscore, 1),
+                'requiredintervaldays' => (int)$card->requiredintervaldays,
+                'nextreviewdate' => (int)$card->nextreviewdate,
+                'lastreviewdate' => (int)$card->lastreviewdate,
             ];
         }
 
-        // Apply random shuffle if itemorder is 0 (Random)
-        if ($adaptivereview->itemorder == 0) {
+        if ($adaptivereview->itemorder == 0 && $box != 3) {
             shuffle($result);
-        }
-
-        // Always force the very first tutorial demo card to be strictly the first card if it's in this set
-        foreach ($result as $index => $c) {
-            if ($c['category'] === 'demo') {
-                // Move it to the very front of the array
-                $demo_card = $result[$index];
-                unset($result[$index]);
-                array_unshift($result, $demo_card);
-                break;
-            }
         }
 
         return array_values($result);
@@ -201,6 +273,10 @@ class external extends external_api {
                 'answer' => new external_value(PARAM_CLEANHTML, 'Answer text'),
                 'hint' => new external_value(PARAM_CLEANHTML, 'Optional hint', VALUE_OPTIONAL),
                 'category' => new external_value(PARAM_TEXT, 'Optional category', VALUE_OPTIONAL),
+                'masteryscore' => new external_value(PARAM_FLOAT, 'Current mastery score'),
+                'requiredintervaldays' => new external_value(PARAM_INT, 'Required interval days'),
+                'nextreviewdate' => new external_value(PARAM_INT, 'Next review timestamp'),
+                'lastreviewdate' => new external_value(PARAM_INT, 'Last review timestamp'),
             ])
         );
     }
@@ -220,24 +296,23 @@ class external extends external_api {
             'rating' => $rating
         ]);
 
-        // Security check: get card and ensure it exists and user can access its module.
         $card = $DB->get_record('adaptivereview_items', ['id' => $params['cardid']], '*', MUST_EXIST);
         $adaptivereview = $DB->get_record('adaptivereview', ['id' => $card->adaptivereviewid], '*', MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $adaptivereview->course], '*', MUST_EXIST);
-        
-        // get_coursemodule_from_instance() returns the CM-ID.
-        // get_fast_modinfo()->get_cm() requires CM-ID (not Instance-ID!).
+
         $cm_raw = get_coursemodule_from_instance('adaptivereview', $adaptivereview->id, $course->id, false, MUST_EXIST);
         $modinfo = get_fast_modinfo($course);
-        $cm = $modinfo->get_cm($cm_raw->id); // cm_info object with customdata
+        $cm = $modinfo->get_cm($cm_raw->id);
         $context = \context_module::instance($cm->id);
+
         self::validate_context($context);
         require_capability('mod/adaptivereview:view', $context);
 
         $userid = $USER->id;
-        $progress = $DB->get_record('adaptivereview_mastery', ['userid' => $userid, 'itemid' => $card->id]);
-        
-        $now = time();
+        $progress = $DB->get_record('adaptivereview_mastery', [
+            'userid' => $userid,
+            'itemid' => $card->id
+        ]);
 
         if (!$progress) {
             $progress = new \stdClass();
@@ -247,31 +322,18 @@ class external extends external_api {
             $progress->status = 0;
             $progress->count_correct = 0;
             $progress->count_wrong = 0;
-            $progress->last_reviewed = $now;
+            $progress->last_reviewed = 0;
+            $progress->masteryscore = 0.0;
+            $progress->requiredintervaldays = 1;
+            $progress->nextreviewdate = 0;
+            $progress->lastreviewdate = 0;
             $progress->id = $DB->insert_record('adaptivereview_mastery', $progress);
-        } else {
-            $progress->last_reviewed = $now;
         }
 
-        if ($params['rating'] == 2) { // Green
-            $progress->count_correct++;
-            if ($progress->box_number < 5) {
-                $progress->box_number++;
-            }
-        } elseif ($params['rating'] == 1) { // Yellow
-            // Stays in current box, just updates timestamp
-        } else { // Red
-            $progress->count_wrong++;
-            if ($progress->box_number > 1) {
-                $progress->box_number--; // Go back one box
-            } else {
-                $progress->box_number = 1; // Stay in box 1 as minimum
-            }
-        }
+        $progress = scheduler::process_review($progress, $params['rating']);
 
         $DB->update_record('adaptivereview_mastery', $progress);
 
-        // Trigger Moodle's completion API to re-evaluate conditions
         $completion = new \completion_info($course);
         if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $userid);
@@ -279,14 +341,14 @@ class external extends external_api {
 
         return [
             'success' => true,
-            'new_box' => $progress->box_number
+            'new_box' => $progress->box_number,
         ];
     }
 
     public static function submit_answer_returns() {
         return new external_single_structure([
             'success' => new external_value(PARAM_BOOL, 'Success indicator'),
-            'new_box' => new external_value(PARAM_INT, 'The new box number for this card'),
+            'new_box' => new external_value(PARAM_INT, 'The new review category for this card'),
         ]);
     }
 
@@ -308,33 +370,45 @@ class external extends external_api {
         
         $cm_raw = get_coursemodule_from_instance('adaptivereview', $params['instanceid'], $course->id, false, MUST_EXIST);
         $modinfo = get_fast_modinfo($course);
-        $cm = $modinfo->get_cm($cm_raw->id); // cm_info object with customdata
+        $cm = $modinfo->get_cm($cm_raw->id);
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('mod/adaptivereview:view', $context);
 
-        // Get all card IDs belonging to this instance.
-        $cardids = $DB->get_fieldset_select('adaptivereview_items', 'id', 'adaptivereviewid = ?', [$params['instanceid']]);
+        $cardids = $DB->get_fieldset_select(
+            'adaptivereview_items',
+            'id',
+            'adaptivereviewid = ?',
+            [$params['instanceid']]
+        );
+
+        $resetcount = 0;
 
         if (!empty($cardids)) {
-            list($insql, $inparams) = $DB->get_in_or_equal($cardids);
-            $inparams[] = $USER->id;
-            $DB->delete_records_select('adaptivereview_mastery', "itemid $insql AND userid = ?", $inparams);
+            list($insql, $inparams) = $DB->get_in_or_equal($cardids, SQL_PARAMS_QM);
+
+            $select = "userid = ? AND itemid $insql";
+            $deleteparams = array_merge([$USER->id], $inparams);
+
+            $resetcount = $DB->count_records_select('adaptivereview_mastery', $select, $deleteparams);
+            $DB->delete_records_select('adaptivereview_mastery', $select, $deleteparams);
         }
 
-        // Ensure completion triggers also run for progress resets
         $completion = new \completion_info($course);
         if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
         }
 
-        return ['success' => true, 'reset_count' => count($cardids)];
+        return [
+            'success' => true,
+            'reset_count' => $resetcount,
+        ];
     }
 
     public static function reset_progress_returns() {
         return new external_single_structure([
-            'success'     => new external_value(PARAM_BOOL, 'Success indicator'),
-            'reset_count' => new external_value(PARAM_INT,  'Number of cards reset'),
+            'success' => new external_value(PARAM_BOOL, 'Success indicator'),
+            'reset_count' => new external_value(PARAM_INT, 'Number of cards reset'),
         ]);
     }
 }

@@ -3,7 +3,7 @@ import './style.css'
 import App from './App.vue'
 import { initApi } from './api'
 
-// Look for the config injected by Moodle block
+// Look for the config injected by Moodle.
 const rootElement = document.getElementById('v-app-mod-adaptivereview')
 
 if (rootElement) {

@@ -49,6 +49,10 @@
         <FIELD NAME="count_correct" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Times answered correctly"/>
         <FIELD NAME="count_wrong" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Times answered incorrectly"/>
         <FIELD NAME="last_reviewed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of last review"/>
+        <FIELD NAME="masteryscore" TYPE="number" LENGTH="5,2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Mastery score from 0.0 to 5.9"/>
+        <FIELD NAME="requiredintervaldays" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Days required before full mastery gain"/>
+        <FIELD NAME="nextreviewdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp when the card is next due"/>
+        <FIELD NAME="lastreviewdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of last mastery review"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

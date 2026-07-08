@@ -16,8 +16,16 @@ export const moodleCall = async (methodname, args) => {
     const response = await axios.post(url, payload);
     const data = response.data[0];
     if (data.error) {
-        throw new Error(data.exception);
+        console.error(data);
+
+        const message =
+            data.exception?.message ??
+            data.message ??
+            JSON.stringify(data);
+
+        throw new Error(message);
     }
+
     return data.data;
 };
 
@@ -51,6 +59,8 @@ export const getLogoUrl = () => {
     return `${config.wwwroot}/mod/adaptivereview/pix/logo.png`;
 };
 
-export const resetProgress = (instanceid) => {
-    return moodleCall('mod_adaptivereview_reset_progress', { instanceid });
+export const resetProgress = () => {
+    return moodleCall('mod_adaptivereview_reset_progress', {
+        instanceid: config.instanceid
+    });
 };

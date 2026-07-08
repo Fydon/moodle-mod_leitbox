@@ -58,6 +58,32 @@ function xmldb_adaptivereview_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026030100, 'adaptivereview');
     }
 
+    if ($oldversion < 2026061805) {
+        $table = new xmldb_table('adaptivereview_progress');
+
+        $field = new xmldb_field('masteryscore', XMLDB_TYPE_NUMBER, '5,2', null, XMLDB_NOTNULL, null, '0', 'last_reviewed');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('requiredintervaldays', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'masteryscore');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('nextreviewdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'requiredintervaldays');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('lastreviewdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'nextreviewdate');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026061805, 'adaptivereview');
+    }
+
     if ($oldversion < 2026070701) {
         $table = new xmldb_table('adaptivereview_cards');
 

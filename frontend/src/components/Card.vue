@@ -1,118 +1,257 @@
 <template>
-  <div class="relative w-full max-w-md mx-auto aspect-[3/4] flip-container group cursor-pointer" :class="{ 'flipped': isFlipped }" @click="toggleFlip">
-    <div class="flip-card-inner w-full h-full absolute top-0 left-0 transition-transform duration-700 rounded-3xl">
-      
-      <!-- Front -->
-      <div class="flip-card-front absolute w-full h-full bg-white rounded-3xl p-6 flex flex-col justify-center items-center border-[2px] border-slate-100 border-b-[8px] bg-clip-padding shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-white to-slate-50">
-        <div class="flex-grow flex flex-col justify-center items-center overflow-y-auto w-full">
-          <h3 class="text-2xl font-bold text-slate-800 text-center" v-html="card.question"></h3>
-          
-          <div v-if="card.hint" class="mt-8 w-full flex flex-col items-center" @click.stop>
-            <button v-if="!showHint" @click="showHint = true" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium py-2 px-5 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors flex items-center gap-2 border border-transparent hover:border-indigo-200">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-              {{ getString('showhint') }}
-            </button>
-            <div v-else class="bg-indigo-50 text-indigo-800 p-4 rounded-xl text-sm italic w-full text-center border border-indigo-100 shadow-inner">
-              <span class="block font-bold text-xs uppercase tracking-wider text-indigo-600 mb-1">{{ getString('hint') }}</span>
-              <span v-html="card.hint"></span>
-            </div>
-          </div>
-        </div>
-
-        <p class="text-sm text-slate-400 mt-6 flex justify-center items-center gap-2 font-medium bg-slate-50 px-4 py-1.5 rounded-full border border-slate-200">
-            <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-            {{ getString('taptoflip') }}
-        </p>
+  <div class="w-full">
+    <div class="relative bg-white rounded-[1.75rem] shadow-lg border border-slate-200 min-h-[520px] p-6 sm:p-7 overflow-hidden">
+      <div class="absolute left-6 top-6">
+        <button
+          type="button"
+          class="text-slate-400 hover:text-slate-700 transition-colors"
+          title="Back"
+          @click="$emit('continue', { result: selectedResult })"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
       </div>
 
-      <!-- Back -->
-      <div class="flip-card-back absolute w-full h-full bg-white/95 backdrop-blur-sm rounded-3xl p-6 flex flex-col border border-indigo-100 shadow-2xl shadow-indigo-100/50">
-        <div class="absolute top-4 right-4 text-indigo-300">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+      <div class="absolute right-6 top-6" v-if="mode === 'browse'">
+        <button
+          type="button"
+          class="text-indigo-300 hover:text-indigo-600 transition-colors"
+          title="Flip card"
+          @click="flipped = !flipped"
+        >
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a4 4 0 0 1 4 4v1m0 0-3-3m3 3 3-3M21 14H11a4 4 0 0 1-4-4V9m0 0 3 3M7 9 4 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex justify-center">
+        <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V5m5 14V9m5 10V3m5 16v-7"></path>
+          </svg>
+          <span>Mastery</span>
+          <span class="text-emerald-700">{{ masteryLabel }}</span>
         </div>
-        
-        <div class="flex-grow flex flex-col justify-center items-center overflow-y-auto mt-4 px-2">
-          <div class="text-xl font-medium text-slate-700 mb-6 text-center leading-relaxed" v-html="card.answer"></div>
+      </div>
+
+      <div class="mt-8 flex flex-col items-center text-center">
+        <div class="text-sm font-semibold text-slate-500 mb-3">
+          Card {{ currentIndex + 1 }} of {{ totalCards }}
         </div>
-        
-        <!-- Controls -->
-        <div class="flex flex-col gap-2 mt-auto" @click.stop v-if="isFlipped">
-          <div class="flex justify-between gap-2">
-            <button @click="$emit('rate', 0)" class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold py-3 rounded-xl transition-all active:scale-95 duration-200 border border-red-100 hover:border-red-200 flex flex-col items-center justify-center">
-              <span>{{ getString('hard_btn') }}</span>
-              <span class="block text-[9px] font-medium opacity-70 mt-0.5 uppercase tracking-wide">🔴 {{ getString('action_back') }}</span>
+
+        <div class="w-full max-w-xs bg-slate-100 rounded-full h-2 overflow-hidden mb-10">
+          <div
+            class="h-full bg-emerald-500 rounded-full transition-all"
+            :style="{ width: progressPercent + '%' }"
+          ></div>
+        </div>
+      </div>
+
+      <div v-if="!flipped" class="flex flex-col items-center justify-between min-h-[360px]">
+        <div class="flex-1 flex items-center justify-center w-full">
+          <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight text-slate-800 text-center max-w-xl" v-html="card.question"></h2>
+        </div>
+
+        <div class="w-full">
+          <div class="flex items-center gap-4 mb-5 text-slate-400">
+            <div class="h-px bg-slate-200 flex-1"></div>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104c.251-.023.503-.041.757-.054C12.472 2.95 14 4.496 14 6.447V9h.553C16.504 9 18.05 10.528 17.95 12.493a14.53 14.53 0 0 1-.054.757m-8.146-10.146C7.981 3.526 6.5 5.13 6.5 7v2.5H6A3.5 3.5 0 0 0 2.5 13v1.5A3.5 3.5 0 0 0 6 18h.5v-5.5m3.25-9.396L9.75 21m0-17.896C11.519 3.526 13 5.13 13 7v14"></path>
+            </svg>
+            <div class="h-px bg-slate-200 flex-1"></div>
+          </div>
+
+          <p class="text-center text-slate-500 font-medium mb-5">
+            Think of your answer before revealing it. Choose an option below.
+          </p>
+
+          <div v-if="mode === 'review'" class="grid sm:grid-cols-2 gap-4">
+            <button
+              type="button"
+              class="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-xl transition-all p-5 text-left flex items-center gap-4"
+              @click="chooseAnswer('know')"
+            >
+              <span class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </span>
+              <span>
+                <span class="block text-xl font-extrabold">I Know It</span>
+                <span class="block text-xs font-medium text-emerald-50 mt-1">I can recall this</span>
+              </span>
             </button>
-            <button @click="$emit('rate', 1)" class="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-3 rounded-xl transition-all active:scale-95 duration-200 border border-amber-200 hover:border-amber-300 flex flex-col items-center justify-center">
-              <span>{{ getString('again_btn') }}</span>
-              <span class="block text-[9px] font-medium opacity-70 mt-0.5 uppercase tracking-wide">🟠 {{ getString('action_stay') }}</span>
+
+            <button
+              type="button"
+              class="w-full rounded-2xl bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl transition-all p-5 text-left flex items-center gap-4"
+              @click="chooseAnswer('notyet')"
+            >
+              <span class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </span>
+              <span>
+                <span class="block text-xl font-extrabold">Not Yet</span>
+                <span class="block text-xs font-medium text-red-50 mt-1">I need another pass</span>
+              </span>
             </button>
           </div>
-          <button @click="$emit('rate', 2)" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl transition-all active:scale-95 duration-200 border border-emerald-400 shadow-lg shadow-emerald-200/50 flex flex-col items-center justify-center">
-            <span class="text-lg">{{ getString('known_btn') }}</span>
-            <span class="block text-[10px] font-medium opacity-90 mt-0.5 uppercase tracking-wider">🟢 {{ getString('action_next') }}</span>
+
+          <div v-else class="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              :disabled="!hasPrevious"
+              class="rounded-2xl border border-slate-200 bg-white text-slate-600 font-bold py-4 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+              @click="$emit('previous')"
+            >
+              ← Previous
+            </button>
+
+            <button
+              type="button"
+              class="rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 transition"
+              @click="flipped = true"
+            >
+              Show Answer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="flex flex-col min-h-[360px]">
+        <div v-if="mode === 'review'" class="rounded-2xl p-4 mb-8 flex items-center gap-4" :class="selectedResult === 'know' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-800 border border-red-100'">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0" :class="selectedResult === 'know' ? 'bg-emerald-500' : 'bg-red-500'">
+            <svg v-if="selectedResult === 'know'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+          <div class="text-lg font-extrabold">
+            You said: {{ selectedResult === 'know' ? 'I Know It' : 'Not Yet' }}
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col justify-center">
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight mb-6 text-center" v-html="card.answer"></h3>
+
+          <div v-if="card.hint" class="rounded-2xl bg-emerald-50 border border-emerald-100 p-5 text-left">
+            <div class="flex items-center gap-3 text-emerald-800 font-extrabold mb-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c-1.5 3-4.5 4.5-8 4.5 0 5.25 3.25 10.25 8 13.5 4.75-3.25 8-8.25 8-13.5-3.5 0-6.5-1.5-8-4.5z"></path>
+              </svg>
+              Why this matters
+            </div>
+            <div class="text-slate-600 leading-relaxed" v-html="card.hint"></div>
+          </div>
+        </div>
+
+        <div v-if="mode === 'review'" class="mt-8">
+          <button
+            type="button"
+            class="w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-extrabold text-xl py-5 shadow-lg hover:shadow-xl transition-all"
+            @click="$emit('continue', { result: selectedResult })"
+          >
+            Continue →
+          </button>
+        </div>
+
+        <div v-else class="mt-8 grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            class="rounded-2xl border border-slate-200 bg-white text-slate-600 font-bold py-4 hover:bg-slate-50 transition"
+            @click="flipped = false"
+          >
+            Show Question
+          </button>
+
+          <button
+            type="button"
+            class="rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 transition"
+            @click="$emit('next')"
+          >
+            Next →
           </button>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-
-const FALLBACKS = {
-    showhint:    'Hinweis anzeigen',
-    hint:        'Hinweis',
-    taptoflip:   'Antippen zum Umdrehen',
-    hard_btn:    'Schwer',
-    action_back: 'Zurück',
-    again_btn:   'Nochmal',
-    action_stay: 'Bleibt',
-    known_btn:   'Gewusst',
-    action_next: 'Nächste',
-};
-
-const getString = (key) => {
-    const moodleStr = window.M?.str?.mod_adaptivereview?.[key];
-    if (moodleStr && !moodleStr.startsWith('[[')) return moodleStr;
-    return FALLBACKS[key] ?? key;
-};
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
-    card: { type: Object, required: true }
+  card: {
+    type: Object,
+    required: true,
+  },
+  mode: {
+    type: String,
+    default: 'review',
+  },
+  currentIndex: {
+    type: Number,
+    default: 0,
+  },
+  totalCards: {
+    type: Number,
+    default: 1,
+  },
+  masteryGoal: {
+    type: Number,
+    default: 4.0,
+  },
+  hasPrevious: {
+    type: Boolean,
+    default: false,
+  },
+  hasNext: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-defineEmits(['rate']);
+const emit = defineEmits(['answer', 'continue', 'previous', 'next']);
 
-const isFlipped = ref(false);
-const showHint = ref(false);
+const flipped = ref(false);
+const selectedResult = ref(null);
 
-const toggleFlip = () => {
-    isFlipped.value = !isFlipped.value;
+watch(
+  () => props.card?.id,
+  () => {
+    flipped.value = false;
+    selectedResult.value = null;
+  }
+);
+
+const masteryScore = computed(() => {
+  const value = Number(props.card?.masteryscore ?? 0);
+  return Number.isNaN(value) ? 0 : value;
+});
+
+const masteryLabel = computed(() => masteryScore.value.toFixed(1));
+
+const progressPercent = computed(() => {
+  if (props.totalCards <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.round(((props.currentIndex + 1) / props.totalCards) * 100));
+});
+
+const chooseAnswer = (result) => {
+  selectedResult.value = result;
+  emit('answer', {
+    card: props.card,
+    result,
+  });
+  flipped.value = true;
 };
-
-watch(() => props.card, () => {
-    isFlipped.value = false;
-    showHint.value = false;
-});
 </script>
-
-<style scoped>
-.flip-container {
-  perspective: 1200px;
-}
-.flip-card-inner {
-  transform-style: preserve-3d;
-}
-.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-}
-.flip-card-front, .flip-card-back {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-.flip-card-back {
-  transform: rotateY(180deg);
-}
-</style>

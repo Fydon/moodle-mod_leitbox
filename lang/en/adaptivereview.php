@@ -20,7 +20,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 $string['modulename'] = 'Adaptive Review';
-$string['modulename_help'] = 'The Adaptive Review activity allows students to practice flashcards using a spaced repetition system based on the Leitner method. The UI uses a modern single-page application approach.';
+$string['modulename_help'] = 'Adaptive Review helps students build long-term mastery through spaced review sessions. Students review learning items repeatedly, with material they know well appearing less frequently and difficult material returning more often.';
 $string['modulenameplural'] = 'Adaptive Reviews';
 $string['pluginadministration'] = 'Adaptive Review administration';
 $string['pluginname'] = 'Adaptive Review';
@@ -48,6 +48,11 @@ $string['box3'] = 'Advanced';
 $string['box4'] = 'Experienced';
 $string['box5'] = 'Expert';
 
+$string['queue_due'] = 'Due Today';
+$string['queue_new'] = 'New';
+$string['queue_recent'] = 'Recently Learned';
+$string['queue_all'] = 'All Cards';
+
 $string['cardorder'] = 'Card Order';
 $string['cardorder_random'] = 'Random';
 $string['cardorder_sequential'] = 'Sequential';
@@ -58,8 +63,8 @@ $string['answer'] = 'Answer';
 $string['hint'] = 'Hint';
 
 // Progress bar
-$string['progress_label'] = 'cards at Expert level';
-$string['progress_aria'] = 'Progress: {mastered} of {total} cards mastered';
+$string['progress_label'] = 'cards meeting the goal';
+$string['progress_aria'] = 'Progress: {mastered} of {total} cards have reached the mastery goal';
 
 
 
@@ -214,6 +219,7 @@ A: It would die because it reflects green light and cannot use it to generate en
 H: Think about why leaves look green.
 
 Here is the text you should create the cards from:';
+$string['import_placeholder'] = 'Paste cards here. Use one card per line, with question and answer separated by a tab or delimiter.';
 $string['importcards'] = 'Import Cards';
 $string['cardsimported'] = '{$a} cards were imported successfully.';
 $string['existingcards'] = 'Existing cards';
@@ -222,19 +228,24 @@ $string['carddeleted'] = 'Card deleted.';
 $string['confirmdeletecard'] = 'Are you sure you want to delete this card?';
 
 // Vue Frontend App Strings
-$string['dashboardtitle'] = 'Your Adaptive Review Cards';
-$string['dashboardsbtitle'] = 'Select a learning deck to practice';
-$string['howitworks'] = 'How does this work?';
+$string['dashboardtitle'] = 'Today\'s Review';
+$string['dashboardsbtitle'] = 'Select a category';
+$string['howitworks'] = 'How does Adaptive Review work?';
 $string['cards'] = 'Cards';
-$string['systemtitle'] = 'The Spaced Repetition System';
-$string['systemintro'] = 'This plugin is based on the Leitner System – invented in 1972 by the Austrian scientist Sebastian Leitner and globally recognized in learning research today. The goal is to move cards from left to right into the final deck ("Graduated").';
-$string['known_btn'] = 'Got it';
-$string['known_desc'] = 'Easy! The card moves one stack to the right.';
-$string['again_btn'] = 'Again';
-$string['again_desc'] = 'Not sure. The card stays in the current stack.';
-$string['hard_btn'] = 'Hard';
-$string['hard_desc'] = 'Did not know it! The card moves back one stack.';
-$string['systemtip'] = '<strong>Tip:</strong> Review the topics behind the cards you did not know – before you start a new attempt.';
+
+$string['systemtitle'] = 'Build Long-Term Mastery';
+$string['systemintro'] = 'Adaptive Review uses spaced repetition to help learners remember information for the long term. Material you know well is reviewed less frequently, while challenging concepts return more often until they become mastered.';
+
+$string['known_btn'] = 'I Know It';
+$string['known_desc'] = 'The card advances toward mastery.';
+
+$string['again_btn'] = 'Review Again';
+$string['again_desc'] = 'Keep the card at its current level for more practice.';
+
+$string['hard_btn'] = 'Needs Work';
+$string['hard_desc'] = 'The card moves back for additional review.';
+
+$string['systemtip'] = '<strong>Tip:</strong> Focus on understanding difficult concepts before starting another review session.';
 $string['gotit'] = 'Got it, let\'s go!';
 $string['showhint'] = 'Show hint';
 $string['taptoflip'] = 'Tap to flip';
