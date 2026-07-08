@@ -27,38 +27,38 @@ class backup_adaptivereview_activity_structure_step extends backup_activity_stru
 
         // Define each element separated.
         $adaptivereview = new backup_nested_element('adaptivereview', ['id'], [
-            'course', 'name', 'intro', 'introformat', 'cardorder',
-            'completion_min_cards', 'completion_min_mastered', 'completion_all_mastered', 'timecreated', 'timemodified'
+            'course', 'name', 'intro', 'introformat', 'itemorder',
+            'completion_min_items', 'completion_min_mastered', 'completion_all_mastered', 'timecreated', 'timemodified'
         ]);
 
-        $cards = new backup_nested_element('cards');
-        $card = new backup_nested_element('card', ['id'], [
+        $items = new backup_nested_element('items');
+        $item = new backup_nested_element('item', ['id'], [
             'question', 'answer', 'hint', 'category'
         ]);
 
-        $progresses = new backup_nested_element('progresses');
-        $progress = new backup_nested_element('progress', ['id'], [
+        $masteries = new backup_nested_element('masteries');
+        $mastery = new backup_nested_element('mastery', ['id'], [
             'userid', 'box_number', 'status', 'count_correct', 'count_wrong', 'last_reviewed'
         ]);
 
         // Build the tree.
-        $adaptivereview->add_child($cards);
-        $cards->add_child($card);
+        $adaptivereview->add_child($items);
+        $items->add_child($item);
 
-        $card->add_child($progresses);
-        $progresses->add_child($progress);
+        $item->add_child($masteries);
+        $masteries->add_child($mastery);
 
         // Define sources.
         $adaptivereview->set_source_table('adaptivereview', ['id' => backup::VAR_ACTIVITYID]);
-        $card->set_source_table('adaptivereview_cards', ['adaptivereviewid' => backup::VAR_PARENTID]);
+        $item->set_source_table('adaptivereview_items', ['adaptivereviewid' => backup::VAR_PARENTID]);
 
         // Export user progress only if userinfo is included in the backup.
         if ($this->get_setting_value('userinfo')) {
-            $progress->set_source_table('adaptivereview_progress', ['cardid' => backup::VAR_PARENTID]);
+            $mastery->set_source_table('adaptivereview_mastery', ['itemid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations to ensure accurate restoration of users and contexts.
-        $progress->annotate_ids('user', 'userid');
+        $mastery->annotate_ids('user', 'userid');
 
         // Annotate file areas (intro text files).
         $adaptivereview->annotate_files('mod_adaptivereview', 'intro', null); // Intro might have embedded images

@@ -59,8 +59,8 @@ class external extends external_api {
 
         // Box 0: Cards with NO progress entry OR box_number = 0
         $sql_new = "SELECT COUNT(*) AS cnt
-                      FROM {adaptivereview_cards} c
-                 LEFT JOIN {adaptivereview_progress} p ON c.id = p.cardid AND p.userid = :userid
+                      FROM {adaptivereview_items} c
+                 LEFT JOIN {adaptivereview_mastery} p ON c.id = p.itemid AND p.userid = :userid
                      WHERE c.adaptivereviewid = :instanceid
                        AND (p.id IS NULL OR p.box_number = 0)";
         $count_new = $DB->count_records_sql($sql_new, ['instanceid' => $params['instanceid'], 'userid' => $userid]);
@@ -70,8 +70,8 @@ class external extends external_api {
 
         // Boxes 1-5: Aggregate query
         $sql_boxes = "SELECT p.box_number, COUNT(*) AS cnt
-                        FROM {adaptivereview_cards} c
-                        JOIN {adaptivereview_progress} p ON c.id = p.cardid
+                        FROM {adaptivereview_items} c
+                        JOIN {adaptivereview_mastery} p ON c.id = p.itemid
                        WHERE c.adaptivereviewid = :instanceid
                          AND p.userid   = :userid
                          AND p.box_number > 0
@@ -125,15 +125,15 @@ class external extends external_api {
         $userid = $USER->id;
         $instanceid = $params['instanceid'];
         
-        // Fetch instance to read cardorder setting
-        $adaptivereview = $DB->get_record('adaptivereview', ['id' => $instanceid], 'cardorder', MUST_EXIST);
-        $order_by = ($adaptivereview->cardorder == 1) ? "ORDER BY c.id ASC" : "";
+        // Fetch instance to read itemorder setting
+        $adaptivereview = $DB->get_record('adaptivereview', ['id' => $instanceid], 'itemorder', MUST_EXIST);
+        $order_by = ($adaptivereview->itemorder == 1) ? "ORDER BY c.id ASC" : "";
 
         if ($box == 0) {
             // New cards: box_number = 0 or no progress record yet
             $sql = "SELECT c.*
-                      FROM {adaptivereview_cards} c
-                 LEFT JOIN {adaptivereview_progress} p ON c.id = p.cardid AND p.userid = :userid
+                      FROM {adaptivereview_items} c
+                 LEFT JOIN {adaptivereview_mastery} p ON c.id = p.itemid AND p.userid = :userid
                      WHERE c.adaptivereviewid = :instanceid
                        AND (p.id IS NULL OR p.box_number = 0)
                        $order_by";
@@ -141,8 +141,8 @@ class external extends external_api {
         } else {
             // Existing cards in a specific box
             $sql = "SELECT c.*
-                      FROM {adaptivereview_cards} c
-                      JOIN {adaptivereview_progress} p ON c.id = p.cardid
+                      FROM {adaptivereview_items} c
+                      JOIN {adaptivereview_mastery} p ON c.id = p.itemid
                      WHERE c.adaptivereviewid = :instanceid
                        AND p.userid = :userid
                        AND p.box_number = :boxnumber
@@ -174,8 +174,8 @@ class external extends external_api {
             ];
         }
 
-        // Apply random shuffle if cardorder is 0 (Random)
-        if ($adaptivereview->cardorder == 0) {
+        // Apply random shuffle if itemorder is 0 (Random)
+        if ($adaptivereview->itemorder == 0) {
             shuffle($result);
         }
 
@@ -221,7 +221,7 @@ class external extends external_api {
         ]);
 
         // Security check: get card and ensure it exists and user can access its module.
-        $card = $DB->get_record('adaptivereview_cards', ['id' => $params['cardid']], '*', MUST_EXIST);
+        $card = $DB->get_record('adaptivereview_items', ['id' => $params['cardid']], '*', MUST_EXIST);
         $adaptivereview = $DB->get_record('adaptivereview', ['id' => $card->adaptivereviewid], '*', MUST_EXIST);
         $course = $DB->get_record('course', ['id' => $adaptivereview->course], '*', MUST_EXIST);
         
@@ -235,20 +235,20 @@ class external extends external_api {
         require_capability('mod/adaptivereview:view', $context);
 
         $userid = $USER->id;
-        $progress = $DB->get_record('adaptivereview_progress', ['userid' => $userid, 'cardid' => $card->id]);
+        $progress = $DB->get_record('adaptivereview_mastery', ['userid' => $userid, 'itemid' => $card->id]);
         
         $now = time();
 
         if (!$progress) {
             $progress = new \stdClass();
             $progress->userid = $userid;
-            $progress->cardid = $card->id;
+            $progress->itemid = $card->id;
             $progress->box_number = 0;
             $progress->status = 0;
             $progress->count_correct = 0;
             $progress->count_wrong = 0;
             $progress->last_reviewed = $now;
-            $progress->id = $DB->insert_record('adaptivereview_progress', $progress);
+            $progress->id = $DB->insert_record('adaptivereview_mastery', $progress);
         } else {
             $progress->last_reviewed = $now;
         }
@@ -269,7 +269,7 @@ class external extends external_api {
             }
         }
 
-        $DB->update_record('adaptivereview_progress', $progress);
+        $DB->update_record('adaptivereview_mastery', $progress);
 
         // Trigger Moodle's completion API to re-evaluate conditions
         $completion = new \completion_info($course);
@@ -314,12 +314,12 @@ class external extends external_api {
         require_capability('mod/adaptivereview:view', $context);
 
         // Get all card IDs belonging to this instance.
-        $cardids = $DB->get_fieldset_select('adaptivereview_cards', 'id', 'adaptivereviewid = ?', [$params['instanceid']]);
+        $cardids = $DB->get_fieldset_select('adaptivereview_items', 'id', 'adaptivereviewid = ?', [$params['instanceid']]);
 
         if (!empty($cardids)) {
             list($insql, $inparams) = $DB->get_in_or_equal($cardids);
             $inparams[] = $USER->id;
-            $DB->delete_records_select('adaptivereview_progress', "cardid $insql AND userid = ?", $inparams);
+            $DB->delete_records_select('adaptivereview_mastery', "itemid $insql AND userid = ?", $inparams);
         }
 
         // Ensure completion triggers also run for progress resets

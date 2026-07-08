@@ -29,10 +29,10 @@ class restore_adaptivereview_activity_structure_step extends restore_activity_st
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('adaptivereview', '/activity/adaptivereview');
-        $paths[] = new restore_path_element('adaptivereview_card', '/activity/adaptivereview/cards/card');
+        $paths[] = new restore_path_element('adaptivereview_item', '/activity/adaptivereview/items/item');
         
         if ($userinfo) {
-            $paths[] = new restore_path_element('adaptivereview_progress', '/activity/adaptivereview/cards/card/progresses/progress');
+            $paths[] = new restore_path_element('adaptivereview_mastery', '/activity/adaptivereview/items/item/masteries/mastery');
         }
 
         return $this->prepare_activity_structure($paths);
@@ -54,7 +54,7 @@ class restore_adaptivereview_activity_structure_step extends restore_activity_st
         $this->apply_activity_instance($newitemid);
     }
 
-    protected function process_adaptivereview_card($data) {
+    protected function process_adaptivereview_item($data) {
         global $DB;
 
         $data = (object)$data;
@@ -62,11 +62,11 @@ class restore_adaptivereview_activity_structure_step extends restore_activity_st
 
         $data->adaptivereviewid = $this->get_new_parentid('adaptivereview');
 
-        $newitemid = $DB->insert_record('adaptivereview_cards', $data);
-        $this->set_mapping('adaptivereview_cards', $oldid, $newitemid);
+        $newitemid = $DB->insert_record('adaptivereview_items', $data);
+        $this->set_mapping('adaptivereview_items', $oldid, $newitemid);
     }
 
-    protected function process_adaptivereview_progress($data) {
+    protected function process_adaptivereview_mastery($data) {
         global $DB;
 
         $data = (object)$data;
@@ -78,10 +78,10 @@ class restore_adaptivereview_activity_structure_step extends restore_activity_st
             return; // Don't restore if the user isn't found
         }
 
-        $data->cardid = $this->get_new_parentid('adaptivereview_cards');
+        $data->itemid = $this->get_new_parentid('adaptivereview_items');
         
-        $newitemid = $DB->insert_record('adaptivereview_progress', $data);
-        $this->set_mapping('adaptivereview_progress', $oldid, $newitemid);
+        $newitemid = $DB->insert_record('adaptivereview_mastery', $data);
+        $this->set_mapping('adaptivereview_mastery', $oldid, $newitemid);
     }
 
     protected function after_execute() {

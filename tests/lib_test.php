@@ -52,13 +52,13 @@ class mod_adaptivereview_lib_testcase extends advanced_testcase {
         $adaptivereview->name = 'Adaptive Review Test Activity';
         $adaptivereview->intro = 'Intro text';
         $adaptivereview->introformat = FORMAT_HTML;
-        $adaptivereview->cardorder = 0;
+        $adaptivereview->itemorder = 0;
         
         $module = $this->getDataGenerator()->create_module('adaptivereview', (array)$adaptivereview);
         $this->assertNotEmpty($module->id);
 
         // Verify demo cards were created by our custom add_instance logic.
-        $cardcount = $DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $module->id]);
+        $cardcount = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $module->id]);
         $this->assertEquals(5, $cardcount); // add_instance inserts 5 demo cards
 
         // 2. Test Update
@@ -78,7 +78,7 @@ class mod_adaptivereview_lib_testcase extends advanced_testcase {
         $this->assertFalse($deleted);
         
         // Cards should also be deleted
-        $cardcount_after = $DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $module->id]);
+        $cardcount_after = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $module->id]);
         $this->assertEquals(0, $cardcount_after);
     }
 }

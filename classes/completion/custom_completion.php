@@ -35,7 +35,7 @@ use core_completion\activity_custom_completion;
  * HOW MOODLE 4.x CUSTOM COMPLETION WORKS:
  * ----------------------------------------
  * 1. adaptivereview_cm_info_static() in lib.php populates $cm->customdata with the
- *    active rules for this instance (e.g. ['completion_min_cards' => 10]).
+ *    active rules for this instance (e.g. ['completion_min_items' => 10]).
  *
  * 2. Moodle calls get_state() for each rule defined in get_defined_custom_rules().
  *    IMPORTANT: get_state() is only called for rules that are ACTIVE in this
@@ -55,7 +55,7 @@ class custom_completion extends activity_custom_completion {
      */
     public static function get_defined_custom_rules(): array {
         return [
-            'completion_min_cards',
+            'completion_min_items',
             'completion_min_mastered',
             'completion_all_mastered',
         ];
@@ -82,24 +82,24 @@ class custom_completion extends activity_custom_completion {
         $instanceid  = $cm->instance;
         $customrules = $cm->customdata['customcompletionrules'] ?? [];
 
-        if ($rule === 'completion_min_cards') {
+        if ($rule === 'completion_min_items') {
             // Not in customdata = rule disabled = treat as complete.
-            if (empty($customrules['completion_min_cards'])) {
+            if (empty($customrules['completion_min_items'])) {
                 return COMPLETION_COMPLETE;
             }
 
-            $target = (int)$customrules['completion_min_cards'];
+            $target = (int)$customrules['completion_min_items'];
 
             // Counts cards that have been answered correctly at least once (box_number >= 1).
             // A card only reaches Box 1+ if it has been rated green at least once.
             // This is the first real quality indicator in the Leitner system —
-            // as opposed to COUNT(DISTINCT cardid) which also counts red cards.
-            $sql = "SELECT COUNT(DISTINCT p.cardid)
-                      FROM {adaptivereview_progress} p
+            // as opposed to COUNT(DISTINCT itemid) which also counts red cards.
+            $sql = "SELECT COUNT(DISTINCT p.itemid)
+                      FROM {adaptivereview_mastery} p
                      WHERE p.userid      = :userid
                        AND p.box_number >= 1
-                       AND p.cardid IN (
-                           SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = :instanceid
+                       AND p.itemid IN (
+                           SELECT id FROM {adaptivereview_items} WHERE adaptivereviewid = :instanceid
                        )";
             $count = (int)($DB->get_field_sql($sql, [
                 'userid'     => $userid,
@@ -114,12 +114,12 @@ class custom_completion extends activity_custom_completion {
             }
             
             $target = (int)$customrules['completion_min_mastered'];
-            $sql = "SELECT COUNT(DISTINCT cardid)
-                      FROM {adaptivereview_progress}
+            $sql = "SELECT COUNT(DISTINCT itemid)
+                      FROM {adaptivereview_mastery}
                      WHERE userid     = :userid
                        AND box_number = 5
-                       AND cardid IN (
-                           SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = :instanceid
+                       AND itemid IN (
+                           SELECT id FROM {adaptivereview_items} WHERE adaptivereviewid = :instanceid
                        )";
             $mastered = (int)($DB->get_field_sql($sql, [
                 'userid'     => $userid,
@@ -133,14 +133,14 @@ class custom_completion extends activity_custom_completion {
                 return COMPLETION_COMPLETE;
             }
             
-            $total = (int)$DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $instanceid]);
+            $total = (int)$DB->count_records('adaptivereview_items', ['adaptivereviewid' => $instanceid]);
             if ($total === 0) {
                 return COMPLETION_INCOMPLETE; // No cards exist yet.
             }
             
-            $sql = "SELECT COUNT(DISTINCT p.cardid)
-                      FROM {adaptivereview_progress} p
-                      JOIN {adaptivereview_cards} c ON p.cardid = c.id
+            $sql = "SELECT COUNT(DISTINCT p.itemid)
+                      FROM {adaptivereview_mastery} p
+                      JOIN {adaptivereview_items} c ON p.itemid = c.id
                      WHERE c.adaptivereviewid = :instanceid
                        AND p.userid    = :userid
                        AND p.box_number = 5";
@@ -165,10 +165,10 @@ class custom_completion extends activity_custom_completion {
         $customrules = $this->cm->customdata['customcompletionrules'] ?? [];
         $descriptions = [];
 
-        if (!empty($customrules['completion_min_cards'])) {
-            $descriptions['completion_min_cards'] =
+        if (!empty($customrules['completion_min_items'])) {
+            $descriptions['completion_min_items'] =
                 get_string('completion_min_cards_desc', 'mod_adaptivereview') . ' ' .
-                $customrules['completion_min_cards'];
+                $customrules['completion_min_items'];
         }
         if (!empty($customrules['completion_min_mastered'])) {
             $descriptions['completion_min_mastered'] =
@@ -192,7 +192,7 @@ class custom_completion extends activity_custom_completion {
     public function get_sort_order(): array {
         return [
             'completionview',
-            'completion_min_cards',
+            'completion_min_items',
             'completion_min_mastered',
             'completion_all_mastered',
         ];

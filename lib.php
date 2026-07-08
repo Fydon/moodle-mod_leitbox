@@ -45,7 +45,7 @@ function adaptivereview_add_instance($adaptivereview) {
     ];
 
     foreach ($demo_cards as $card) {
-        $DB->insert_record('adaptivereview_cards', (object)$card);
+        $DB->insert_record('adaptivereview_items', (object)$card);
     }
 
     return $id;
@@ -76,13 +76,13 @@ function adaptivereview_delete_instance($id) {
         return false;
     }
     
-    $sql = "SELECT id FROM {adaptivereview_cards} WHERE adaptivereviewid = ?";
+    $sql = "SELECT id FROM {adaptivereview_items} WHERE adaptivereviewid = ?";
     if ($cards = $DB->get_records_sql($sql, [$id])) {
         list($in, $params) = $DB->get_in_or_equal(array_keys($cards));
-        $DB->delete_records_select('adaptivereview_progress', "cardid $in", $params);
+        $DB->delete_records_select('adaptivereview_mastery', "itemid $in", $params);
     }
     
-    $DB->delete_records('adaptivereview_cards', ['adaptivereviewid' => $id]);
+    $DB->delete_records('adaptivereview_items', ['adaptivereviewid' => $id]);
     $DB->delete_records('adaptivereview', ['id' => $id]);
     return true;
 }
@@ -116,7 +116,7 @@ function adaptivereview_get_coursemodule_info($coursemodule) {
     global $DB;
 
     $adaptivereview = $DB->get_record('adaptivereview', ['id' => $coursemodule->instance],
-        'id, name, completion_min_cards, completion_min_mastered, completion_all_mastered');
+        'id, name, completion_min_items, completion_min_mastered, completion_all_mastered');
     if (!$adaptivereview) {
         return false;
     }
@@ -129,9 +129,9 @@ function adaptivereview_get_coursemodule_info($coursemodule) {
     // ALL to return COMPLETE. Inactive rules (value = 0) must NOT be in the array –
     // otherwise they permanently block completion.
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
-        if (!empty($adaptivereview->completion_min_cards)) {
-            $result->customdata['customcompletionrules']['completion_min_cards'] =
-                (int)$adaptivereview->completion_min_cards;
+        if (!empty($adaptivereview->completion_min_items)) {
+            $result->customdata['customcompletionrules']['completion_min_items'] =
+                (int)$adaptivereview->completion_min_items;
         }
         if (!empty($adaptivereview->completion_min_mastered)) {
             $result->customdata['customcompletionrules']['completion_min_mastered'] =
@@ -152,7 +152,7 @@ function adaptivereview_get_coursemodule_info($coursemodule) {
  * @return array Array of rule name strings
  */
 function adaptivereview_get_custom_completion_rules() {
-    return ['completion_min_cards', 'completion_min_mastered', 'completion_all_mastered'];
+    return ['completion_min_items', 'completion_min_mastered', 'completion_all_mastered'];
 }
 
 /**
@@ -164,8 +164,8 @@ function adaptivereview_get_custom_completion_rules() {
  */
 function adaptivereview_get_completion_active_rule_descriptions($course, $cm) {
     $rules = [];
-    if (!empty($cm->customdata['customcompletionrules']['completion_min_cards'])) {
-        $rules[] = get_string('completion_min_cards_desc', 'mod_adaptivereview') . ' ' . $cm->customdata['customcompletionrules']['completion_min_cards'];
+    if (!empty($cm->customdata['customcompletionrules']['completion_min_items'])) {
+        $rules[] = get_string('completion_min_cards_desc', 'mod_adaptivereview') . ' ' . $cm->customdata['customcompletionrules']['completion_min_items'];
     }
     if (!empty($cm->customdata['customcompletionrules']['completion_min_mastered'])) {
         $rules[] = get_string('completion_min_mastered_desc', 'mod_adaptivereview') . ' ' . $cm->customdata['customcompletionrules']['completion_min_mastered'];

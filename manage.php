@@ -53,7 +53,7 @@ function mod_adaptivereview_auto_delete_demos($adaptivereviewid) {
     global $DB;
     // Only auto-delete if NO custom (non-demo) cards exist yet.
     $custom_count = $DB->count_records_select(
-        'adaptivereview_cards',
+        'adaptivereview_items',
         "adaptivereviewid = ? AND (category IS NULL OR category != 'demo')",
         [$adaptivereviewid]
     );
@@ -62,14 +62,14 @@ function mod_adaptivereview_auto_delete_demos($adaptivereviewid) {
     }
     // Delete all remaining demo cards and their progress.
     $demo_ids = $DB->get_fieldset_select(
-        'adaptivereview_cards', 'id',
+        'adaptivereview_items', 'id',
         "adaptivereviewid = ? AND category = 'demo'",
         [$adaptivereviewid]
     );
     if (!empty($demo_ids)) {
         list($in, $params) = $DB->get_in_or_equal($demo_ids);
-        $DB->delete_records_select('adaptivereview_progress', "cardid $in", $params);
-        $DB->delete_records_select('adaptivereview_cards', "id $in", $params);
+        $DB->delete_records_select('adaptivereview_mastery', "itemid $in", $params);
+        $DB->delete_records_select('adaptivereview_items', "id $in", $params);
     }
 }
 
@@ -78,8 +78,8 @@ function mod_adaptivereview_auto_delete_demos($adaptivereviewid) {
 // =========================================================
 
 if ($action === 'delete' && $cardid && confirm_sesskey()) {
-    $DB->delete_records('adaptivereview_progress', ['cardid' => $cardid]);
-    $DB->delete_records('adaptivereview_cards', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id]);
+    $DB->delete_records('adaptivereview_mastery', ['itemid' => $cardid]);
+    $DB->delete_records('adaptivereview_items', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id]);
     redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
         get_string('carddeleted', 'mod_adaptivereview'));
 }
@@ -92,13 +92,13 @@ if ($action === 'bulkdelete' && data_submitted() && confirm_sesskey()) {
         list($in, $params) = $DB->get_in_or_equal($cardids);
         $params[]    = $adaptivereview->id;
         $valid_cards = $DB->get_fieldset_sql(
-            "SELECT id FROM {adaptivereview_cards} WHERE id $in AND adaptivereviewid = ?", $params);
+            "SELECT id FROM {adaptivereview_items} WHERE id $in AND adaptivereviewid = ?", $params);
 
         if (!empty($valid_cards)) {
             $deleted_count = count($valid_cards);
             list($in_valid, $params_valid) = $DB->get_in_or_equal($valid_cards);
-            $DB->delete_records_select('adaptivereview_progress', "cardid $in_valid", $params_valid);
-            $DB->delete_records_select('adaptivereview_cards', "id $in_valid", $params_valid);
+            $DB->delete_records_select('adaptivereview_mastery', "itemid $in_valid", $params_valid);
+            $DB->delete_records_select('adaptivereview_items', "id $in_valid", $params_valid);
         }
     }
 
@@ -111,7 +111,7 @@ if ($action === 'bulkdelete' && data_submitted() && confirm_sesskey()) {
 }
 
 if ($action === 'export' && confirm_sesskey()) {
-    $cards          = $DB->get_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id], 'id ASC');
+    $cards          = $DB->get_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id], 'id ASC');
     $export_content = "";
     foreach ($cards as $c) {
         $export_content .= "===CARD===\n";
@@ -128,7 +128,7 @@ if ($action === 'export' && confirm_sesskey()) {
 }
 
 if ($action === 'add' && data_submitted() && confirm_sesskey()) {
-    $current_count = $DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id]);
+    $current_count = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
     if ($current_count >= 200) {
         redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
             get_string('error_limit_reached', 'mod_adaptivereview'), null,
@@ -146,7 +146,7 @@ if ($action === 'add' && data_submitted() && confirm_sesskey()) {
         $newcard->question  = $q;
         $newcard->answer    = $a;
         $newcard->hint      = $h;
-        $DB->insert_record('adaptivereview_cards', $newcard);
+        $DB->insert_record('adaptivereview_items', $newcard);
         redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
             get_string('cardadded', 'mod_adaptivereview'));
     }
@@ -154,7 +154,7 @@ if ($action === 'add' && data_submitted() && confirm_sesskey()) {
 
 if ($action === 'update' && data_submitted() && confirm_sesskey() && $cardid) {
     // Security check: ensure the card belongs to this adaptivereview instance.
-    if (!$DB->record_exists('adaptivereview_cards', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id])) {
+    if (!$DB->record_exists('adaptivereview_items', ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id])) {
         throw new \moodle_exception('invalidrecord');
     }
 
@@ -168,7 +168,7 @@ if ($action === 'update' && data_submitted() && confirm_sesskey() && $cardid) {
         $updatecard->question = $q;
         $updatecard->answer   = $a;
         $updatecard->hint     = $h;
-        $DB->update_record('adaptivereview_cards', $updatecard);
+        $DB->update_record('adaptivereview_items', $updatecard);
         redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
             get_string('cardupdated', 'mod_adaptivereview'));
     }
@@ -178,7 +178,7 @@ if ($action === 'import' && data_submitted() && confirm_sesskey()) {
     $importtext   = required_param('importdata', PARAM_RAW);
     $parsed_cards = \mod_adaptivereview\import_handler::parse_text($importtext);
 
-    $current_count = $DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id]);
+    $current_count = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
     $new_total     = $current_count + count($parsed_cards);
 
     if ($new_total > 200) {
@@ -199,7 +199,7 @@ if ($action === 'import' && data_submitted() && confirm_sesskey()) {
         $newcard->question  = $card['question'];
         $newcard->answer    = $card['answer'];
         $newcard->hint      = $card['hint'];
-        $DB->insert_record('adaptivereview_cards', $newcard);
+        $DB->insert_record('adaptivereview_items', $newcard);
         $count++;
     }
     redirect(new moodle_url('/mod/adaptivereview/manage.php', ['id' => $cm->id]),
@@ -213,7 +213,7 @@ if ($action === 'import' && data_submitted() && confirm_sesskey()) {
 // Card being edited (if applicable).
 $editcard = null;
 if ($action === 'edit' && $cardid) {
-    $editcard = $DB->get_record('adaptivereview_cards',
+    $editcard = $DB->get_record('adaptivereview_items',
         ['id' => $cardid, 'adaptivereviewid' => $adaptivereview->id]);
 }
 
@@ -230,8 +230,8 @@ $prompts = [
 // Pagination.
 $page       = optional_param('page', 0, PARAM_INT);
 $perpage    = 50;
-$totalcards = $DB->count_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id]);
-$cards      = $DB->get_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id],
+$totalcards = $DB->count_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
+$cards      = $DB->get_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id],
     'id ASC', '*', $page * $perpage, $perpage);
 
 // Build the cards array for the Mustache template.

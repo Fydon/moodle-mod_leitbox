@@ -79,7 +79,7 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
         // ----------------------------------------------------------------
         $group1_name   = 'completion_min_cards_group' . $suffix;
         $enabled1_name = 'completion_min_cards_enabled' . $suffix;
-        $value1_name   = 'completion_min_cards' . $suffix;
+        $value1_name   = 'completion_min_items' . $suffix;
 
         $group1 = [];
         $group1[] = $mform->createElement('checkbox', $enabled1_name, '',
@@ -88,8 +88,8 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
         $mform->setType($value1_name, PARAM_INT);
 
         $mform->addGroup($group1, $group1_name,
-            get_string('completion_min_cards', 'mod_adaptivereview'), [' '], false);
-        $mform->addHelpButton($group1_name, 'completion_min_cards', 'mod_adaptivereview');
+            get_string('completion_min_items', 'mod_adaptivereview'), [' '], false);
+        $mform->addHelpButton($group1_name, 'completion_min_items', 'mod_adaptivereview');
         $mform->hideIf($value1_name, $enabled1_name, 'notchecked');
 
         // ----------------------------------------------------------------
@@ -141,7 +141,7 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
         $suffix = $this->get_suffix();
 
         $min_cards_on   = !empty($data['completion_min_cards_enabled' . $suffix])
-                          && (int)($data['completion_min_cards' . $suffix] ?? 0) > 0;
+                          && (int)($data['completion_min_items' . $suffix] ?? 0) > 0;
         $min_mastered_on = !empty($data['completion_min_mastered_enabled' . $suffix])
                            && (int)($data['completion_min_mastered' . $suffix] ?? 0) > 0;
         $all_mastered_on = !empty($data['completion_all_mastered' . $suffix]);
@@ -162,8 +162,8 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
         parent::data_preprocessing($default_values);
         $suffix = $this->get_suffix();
 
-        // Rule 1: completion_min_cards
-        $key_val     = 'completion_min_cards' . $suffix;
+        // Rule 1: completion_min_items
+        $key_val     = 'completion_min_items' . $suffix;
         $key_enabled = 'completion_min_cards_enabled' . $suffix;
 
         if (!empty($default_values[$key_val])) {
@@ -216,7 +216,7 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
 
         // If not using automatic completion at all, zero out all our fields.
         if (!$autocompletion) {
-            $data->{'completion_min_cards' . $suffix}    = 0;
+            $data->{'completion_min_items' . $suffix}    = 0;
             $data->{'completion_min_mastered' . $suffix} = 0;
             $data->{'completion_all_mastered' . $suffix} = 0;
             return;
@@ -224,7 +224,7 @@ class mod_adaptivereview_mod_form extends moodleform_mod {
 
         // Rule 1: if the checkbox is off, write 0 so the rule is disabled.
         if (empty($data->{'completion_min_cards_enabled' . $suffix})) {
-            $data->{'completion_min_cards' . $suffix} = 0;
+            $data->{'completion_min_items' . $suffix} = 0;
         }
 
         // Rule 2: same for min_mastered.

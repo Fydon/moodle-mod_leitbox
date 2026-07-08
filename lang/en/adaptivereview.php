@@ -29,7 +29,7 @@ $string['adaptivereview:view'] = 'View Adaptive Review';
 
 $string['adaptivereviewname'] = 'Activity Name';
 $string['settings'] = 'Adaptive Review Settings';
-$string['completion_min_cards'] = 'Minimum cards answered correctly';
+$string['completion_min_items'] = 'Minimum cards answered correctly';
 $string['completion_min_cards_desc'] = 'Student must answer at least this many cards correctly at least once:';
 $string['completion_min_cards_help'] = 'A card counts as "correctly answered" once it has been rated green at least once and is in Box 1 or higher. Cards that were only rated red or yellow do not count.';
 
@@ -64,13 +64,13 @@ $string['progress_aria'] = 'Progress: {mastered} of {total} cards mastered';
 
 
 // Privacy metadata.
-$string['privacy:metadata:adaptivereview_progress'] = 'Information about user progress on Adaptive Review.';
-$string['privacy:metadata:adaptivereview_progress:userid'] = 'The user ID.';
-$string['privacy:metadata:adaptivereview_progress:cardid'] = 'The card ID.';
-$string['privacy:metadata:adaptivereview_progress:box_number'] = 'The Leitner box the card is currently in.';
-$string['privacy:metadata:adaptivereview_progress:count_correct'] = 'The number of times the user answered the card correctly.';
-$string['privacy:metadata:adaptivereview_progress:count_wrong'] = 'The number of times the user answered the card incorrectly.';
-$string['privacy:metadata:adaptivereview_progress:last_reviewed'] = 'The timestamp when the card was last reviewed.';
+$string['privacy:metadata:adaptivereview_mastery'] = 'Information about user progress on Adaptive Review.';
+$string['privacy:metadata:adaptivereview_mastery:userid'] = 'The user ID.';
+$string['privacy:metadata:adaptivereview_mastery:cardid'] = 'The card ID.';
+$string['privacy:metadata:adaptivereview_mastery:box_number'] = 'The Leitner box the card is currently in.';
+$string['privacy:metadata:adaptivereview_mastery:count_correct'] = 'The number of times the user answered the card correctly.';
+$string['privacy:metadata:adaptivereview_mastery:count_wrong'] = 'The number of times the user answered the card incorrectly.';
+$string['privacy:metadata:adaptivereview_mastery:last_reviewed'] = 'The timestamp when the card was last reviewed.';
 
 // Management Interface
 $string['demo_q1'] = 'Welcome to Adaptive Review.<br><br>What is the goal of this learning system?';

@@ -63,7 +63,7 @@ class external_test extends externallib_advanced_testcase {
         $adaptivereview = $this->getDataGenerator()->create_module('adaptivereview', ['course' => $course->id]);
 
         // Clear default demo cards inserted by the mod_form/lib.php to start fresh.
-        $DB->delete_records('adaptivereview_cards', ['adaptivereviewid' => $adaptivereview->id]);
+        $DB->delete_records('adaptivereview_items', ['adaptivereviewid' => $adaptivereview->id]);
 
         // Insert a test card.
         $card = new \stdClass();
@@ -71,7 +71,7 @@ class external_test extends externallib_advanced_testcase {
         $card->question = 'What is the capital of France?';
         $card->answer = 'Paris';
         $card->hint = 'City of light';
-        $card->id = $DB->insert_record('adaptivereview_cards', $card);
+        $card->id = $DB->insert_record('adaptivereview_items', $card);
 
         return [$course, $student, $adaptivereview, $card];
     }
@@ -113,7 +113,7 @@ class external_test extends externallib_advanced_testcase {
         $this->assertEquals(1, $result['new_box']); // Should move from Box 0 to Box 1
 
         // Check DB
-        $progress = $DB->get_record('adaptivereview_progress', ['userid' => $student->id, 'cardid' => $card->id]);
+        $progress = $DB->get_record('adaptivereview_mastery', ['userid' => $student->id, 'itemid' => $card->id]);
         $this->assertEquals(1, $progress->box_number);
         $this->assertEquals(1, $progress->count_correct);
 
@@ -121,7 +121,7 @@ class external_test extends externallib_advanced_testcase {
         $result = external::submit_answer($card->id, 0);
         $result = external_api::clean_returnvalue(external::submit_answer_returns(), $result);
         
-        $progress = $DB->get_record('adaptivereview_progress', ['userid' => $student->id, 'cardid' => $card->id]);
+        $progress = $DB->get_record('adaptivereview_mastery', ['userid' => $student->id, 'itemid' => $card->id]);
         $this->assertEquals(1, $progress->box_number); // Cannot drop below 1
         $this->assertEquals(1, $progress->count_wrong);
     }
@@ -139,7 +139,7 @@ class external_test extends externallib_advanced_testcase {
         external::submit_answer($card->id, 2);
         
         // Ensure progress exists.
-        $this->assertEquals(1, $DB->count_records('adaptivereview_progress', ['userid' => $student->id]));
+        $this->assertEquals(1, $DB->count_records('adaptivereview_mastery', ['userid' => $student->id]));
 
         // Call reset.
         $result = external::reset_progress($adaptivereview->id);
@@ -149,7 +149,7 @@ class external_test extends externallib_advanced_testcase {
         $this->assertEquals(1, $result['reset_count']);
 
         // Progress should be completely gone for this user/instance.
-        $this->assertEquals(0, $DB->count_records('adaptivereview_progress', ['userid' => $student->id]));
+        $this->assertEquals(0, $DB->count_records('adaptivereview_mastery', ['userid' => $student->id]));
     }
     /**
      * Test that invalid box number throws exception.
@@ -175,7 +175,7 @@ class external_test extends externallib_advanced_testcase {
         }
 
         // Despite 5 interactions, only 1 unique card was learned
-        $progress_count = $DB->count_records('adaptivereview_progress', ['userid' => $student->id]);
+        $progress_count = $DB->count_records('adaptivereview_mastery', ['userid' => $student->id]);
         $this->assertEquals(1, $progress_count); // Only 1 unique progress record (UNIQUE INDEX)
     }
 }
