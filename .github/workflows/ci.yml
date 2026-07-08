@@ -69,8 +69,8 @@ jobs:
             --db-pass postgres \
             --db-name moodle \
             --db-port 5432 \
-            --moodle-branch ${{ matrix.moodle-branch }} \
-            --db ${{ matrix.database }}
+            --branch ${{ matrix.moodle-branch }} \
+            --db-type ${{ matrix.database }}
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
