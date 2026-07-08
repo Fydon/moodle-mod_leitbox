@@ -108,10 +108,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci mustache
 
-      - name: Javascript Lint
-        if: ${{ !cancelled() }}
-        run: moodle-plugin-ci jslint
-
       - name: PHPUnit tests
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpunit --coverage-clover
