@@ -106,7 +106,7 @@ jobs:
 
       - name: Mustache Lint
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci mustachelint
+        run: moodle-plugin-ci mustache
 
       - name: Javascript Lint
         if: ${{ !cancelled() }}
